@@ -2,7 +2,7 @@
 
 check_whiptail() {
     if ! command -v whiptail &> /dev/null; then
-        echo "[+] whiptail não encontrado. Instalando..."
+        echo "➤ whiptail não encontrado. Instalando..."
         dnf install -y newt || {
             echo "Erro ao instalar whiptail (newt). Saindo."
             exit 1
@@ -20,12 +20,11 @@ menu_scripts() {
             "4" "Instalar Zabbix Server" \
             "5" "Instalar Speedtest" \
             "6" "Conf rc.local Ubunto" \
-            # Aqui você pode adicionar mais scripts com números incrementais
             3>&1 1>&2 2>&3)
         RET=$?
 
         if [ $RET -ne 0 ]; then
-            echo "Cancelado pelo usuário."
+            echo "➤ Cancelado pelo usuário."
             exit 0
         fi
 
