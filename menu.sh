@@ -17,9 +17,11 @@ menu_scripts() {
             "1" "Conf inicial" \
             "2" "Corrigir repositórios CentOS 7" \
             "3" "Instalar Unifi controller" \
+            "4" "Instalar Zabbix Server" \
+            "5" "Instalar Speedtest" \
+            "6" "Conf rc.local Ubunto" \
             # Aqui você pode adicionar mais scripts com números incrementais
             3>&1 1>&2 2>&3)
-
         RET=$?
 
         if [ $RET -ne 0 ]; then
@@ -33,7 +35,7 @@ menu_scripts() {
                 exit 0
                 ;;
             1)
-                bash <(curl -s https://raw.githubusercontent.com/0LB-i/fix-centos-repos/main/conf-ini.sh)
+                bash <(curl -s https://raw.githubusercontent.com/0LB-i/menu/main/conf-ini.sh)
                 ;;
             2)
                 bash <(curl -s https://raw.githubusercontent.com/0LB-i/fix-centos-repos/main/fix-centos-repos.sh)
@@ -41,11 +43,19 @@ menu_scripts() {
             3)
                 bash <(curl -s https://raw.githubusercontent.com/0LB-i/unifi-server-script/main/install-unifi-server.sh)
                 ;;
+            4)
+                bash <(curl -s https://raw.githubusercontent.com/0LB-i/zabbix-server/main/zabbix-server.sh)
+                ;;
+            5)
+                bash <(curl -s https://raw.githubusercontent.com/0LB-i/speedtest-script/main/install-speedtest.sh)
+                ;;
+            6)
+                bash <(curl -s https://raw.githubusercontent.com/0LB-i/rc-local-ubunto/main/rc-local-ubunto.sh)
+                ;;
             *)
                 whiptail --msgbox "Opção inválida!" 8 30
                 ;;
         esac
-
         whiptail --msgbox "Execução finalizada. Pressione OK para voltar ao menu." 8 45
     done
 }
