@@ -19,7 +19,7 @@ menu_scripts() {
             "3" "Instalar Unifi controller" \
             "4" "Instalar Zabbix Server" \
             "5" "Instalar Speedtest" \
-            "6" "Conf rc.local Ubunto" \
+            "6" "Instalar Bacula-fd em distros Rhel 9" \
             3>&1 1>&2 2>&3)
         RET=$?
 
@@ -49,7 +49,7 @@ menu_scripts() {
                 bash <(curl -s https://raw.githubusercontent.com/0LB-i/speedtest-script/main/install-speedtest.sh)
                 ;;
             6)
-                bash <(curl -s https://raw.githubusercontent.com/0LB-i/rc-local-ubunto/main/rc-local-ubunto.sh)
+                bash <(curl -s https://raw.githubusercontent.com/0LB-i/bacula-fd/main/bacula-fd.sh)
                 ;;
             *)
                 whiptail --msgbox "Opção inválida!" 8 30
