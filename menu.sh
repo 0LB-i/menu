@@ -40,15 +40,18 @@ menu_scripts() {
                 bash <(curl -s https://raw.githubusercontent.com/0LB-i/fix-centos-repos/main/fix-centos-repos.sh)
                 ;;
             3)
-                bash <(curl -s https://raw.githubusercontent.com/0LB-i/unifi-server-script/main/install-unifi-server.sh)
+                bash <(curl -s https://raw.githubusercontent.com/0LB-i/menu/main/zabbix-agent.sh)
                 ;;
             4)
-                bash <(curl -s https://raw.githubusercontent.com/0LB-i/zabbix-server/main/zabbix-server.sh)
+                bash <(curl -s https://raw.githubusercontent.com/0LB-i/unifi-server-script/main/install-unifi-server.sh)
                 ;;
             5)
-                bash <(curl -s https://raw.githubusercontent.com/0LB-i/speedtest-script/main/install-speedtest.sh)
+                bash <(curl -s https://raw.githubusercontent.com/0LB-i/zabbix-server/main/zabbix-server.sh)
                 ;;
             6)
+                bash <(curl -s https://raw.githubusercontent.com/0LB-i/speedtest-script/main/install-speedtest.sh)
+                ;;
+            7)
                 bash <(curl -s https://raw.githubusercontent.com/0LB-i/bacula-fd/main/bacula-fd.sh)
                 ;;
             *)
