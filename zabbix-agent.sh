@@ -10,8 +10,6 @@ prompt_input() {
 }
 
 echo "===== ZABBIX AGENT INSTALLER ====="
-
-# Padrão: Zabbix 7.0
 prompt_input ZBX_VERSION "Informe a versão do Zabbix" "7.0"
 
 echo "Qual agente deseja instalar?"
@@ -59,20 +57,16 @@ else
     exit 1
 fi
 
-# Caminho da conf
 CONF_FILE="/etc/zabbix/${ZBX_AGENT}.conf"
-
 # Editar config
 sed -i "s|^Server=.*|Server=${ZBX_SERVER}|" "$CONF_FILE"
 sed -i "s|^ServerActive=.*|ServerActive=${ZBX_PROXY:-$ZBX_SERVER}|" "$CONF_FILE"
 sed -i "s|^Hostname=.*|Hostname=${ZBX_HOSTNAME}|" "$CONF_FILE"
 
-# Habilitar e iniciar o serviço
 systemctl enable "$ZBX_AGENT"
 systemctl restart "$ZBX_AGENT"
 
 echo -e "\n✅ Instalação concluída!"
-echo "Arquivo de configuração: $CONF_FILE"
 echo "Servidor: $ZBX_SERVER"
 echo "Proxy: ${ZBX_PROXY:-<não usado>}"
 echo "Hostname: $ZBX_HOSTNAME"
