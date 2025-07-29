@@ -47,17 +47,18 @@ get_latest_patch_version() {
 
     echo "🔍 Verificando a versão mais recente de patch para $base_version..."
 
+    # Captura todos os zabbix-release-base_version-X.Y.elX.rpm, extrai o X.Y completo, e ordena corretamente
     latest_patch=$(curl -s "$repo_url" | \
-        grep -oP "${pkg_prefix}-\K[0-9]+(?=\.el${OS_VER}\.noarch\.rpm)" | \
-        sort -nr | head -n1)
+        grep -oP "${pkg_prefix}-\K[0-9]+\.[0-9]+(?=-1\.el${OS_VER}\.noarch\.rpm)" | \
+        sort -V | tail -n1)
 
     if [[ -z "$latest_patch" ]]; then
         echo "❌ Não foi possível localizar a subversão do pacote. Verifique a versão digitada."
         exit 1
     fi
 
-    echo "📦 Subversão detectada: ${base_version}.${latest_patch}"
-    ZBX_VERSION_FULL="${base_version}.${latest_patch}"
+    echo "📦 Subversão detectada: ${latest_patch}"
+    ZBX_VERSION_FULL="${latest_patch}"
 }
 
 get_latest_patch_version "$ZBX_VERSION"
