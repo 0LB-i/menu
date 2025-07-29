@@ -16,10 +16,11 @@ menu_scripts() {
             "0" "Sair" \
             "1" "Conf inicial" \
             "2" "Corrigir repositórios CentOS 7" \
-            "3" "Instalar Unifi controller" \
-            "4" "Instalar Zabbix Server" \
-            "5" "Instalar Speedtest" \
-            "6" "Instalar Bacula-fd em distros Rhel 9" \
+            "3" "Instalar Zabbix agent" \
+            "4" "Instalar Unifi controller" \
+            "5" "Instalar Zabbix Server" \
+            "6" "Instalar Speedtest" \
+            "7" "Instalar Bacula-fd em distros Rhel 9" \
             3>&1 1>&2 2>&3)
         RET=$?
 
