@@ -25,7 +25,7 @@ prompt_input ZBX_HOSTNAME "Informe o Hostname do agente:" "$(hostname)"
 if [ -f /etc/os-release ]; then
     source /etc/os-release
     OS_ID=$ID
-    OS_VER=$VERSION_ID
+    OS_VER=${VERSION_ID%%.*}
     ARCH=$(dpkg --print-architecture 2>/dev/null || uname -m)
 else
     echo "❌ Não foi possível detectar a distribuição."
