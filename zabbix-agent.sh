@@ -40,25 +40,24 @@ else
 fi
 
 # Buscar última subversão (patch) do Zabbix release
-get_latest_patch_version() {
-    local base_version="$1"  # Ex: 5.0
+get_latest_agent_version() {
+    local base_version="$1"  # ex: 5.0
     local repo_url="https://repo.zabbix.com/zabbix/${base_version}/${REPO_BASE}/${OS_VER}/${ARCH}/"
-    local pkg_prefix="zabbix-release-${base_version}"
 
-    echo "🔍 Verificando a versão mais recente de patch para $base_version..."
+    echo "🔍 Buscando a versão mais recente do agente para $base_version..."
 
-    # Captura as versões no formato X.Y.Z completo
-    latest_patch=$(curl -s "$repo_url" | \
-        grep -oP "${pkg_prefix}-\K[0-9]+\.[0-9]+\.[0-9]+(?=-1\.el${OS_VER}\.noarch\.rpm)" | \
+    latest_agent_version=$(curl -s "$repo_url" | \
+        grep -oP "zabbix-agent(-2)?-${base_version}\.[0-9]+-1\.el${OS_VER}\.${ARCH}\.rpm" | \
+        sed -E "s/zabbix-agent(-2)?-(${base_version}\.[0-9]+)-1\.el${OS_VER}\.${ARCH}\.rpm/\2/" | \
         sort -V | tail -n1)
 
-    if [[ -z "$latest_patch" ]]; then
-        echo "❌ Não foi possível localizar a subversão do pacote. Verifique a versão digitada."
+    if [[ -z "$latest_agent_version" ]]; then
+        echo "❌ Não foi possível localizar a versão do agente."
         exit 1
     fi
 
-    echo "📦 Subversão detectada: ${latest_patch}"
-    ZBX_VERSION_FULL="${latest_patch}"
+    echo "📦 Versão do agente detectada: $latest_agent_version"
+    ZBX_AGENT_VERSION_FULL="$latest_agent_version"
 }
 
 get_latest_patch_version "$ZBX_VERSION"
