@@ -41,15 +41,15 @@ fi
 
 # Buscar última subversão (patch) do Zabbix release
 get_latest_patch_version() {
-    local base_version="$1"
+    local base_version="$1"  # Ex: 5.0
     local repo_url="https://repo.zabbix.com/zabbix/${base_version}/${REPO_BASE}/${OS_VER}/${ARCH}/"
     local pkg_prefix="zabbix-release-${base_version}"
 
     echo "🔍 Verificando a versão mais recente de patch para $base_version..."
 
-    # Captura todos os zabbix-release-base_version-X.Y.elX.rpm, extrai o X.Y completo, e ordena corretamente
+    # Captura as versões no formato X.Y.Z completo
     latest_patch=$(curl -s "$repo_url" | \
-        grep -oP "${pkg_prefix}-\K[0-9]+\.[0-9]+(?=-1\.el${OS_VER}\.noarch\.rpm)" | \
+        grep -oP "${pkg_prefix}-\K[0-9]+\.[0-9]+\.[0-9]+(?=-1\.el${OS_VER}\.noarch\.rpm)" | \
         sort -V | tail -n1)
 
     if [[ -z "$latest_patch" ]]; then
