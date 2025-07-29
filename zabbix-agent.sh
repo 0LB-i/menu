@@ -32,9 +32,16 @@ else
     exit 1
 fi
 
+# Forçar uso do repositório RHEL para Rocky, AlmaLinux e CentOS
+if [[ "$OS_ID" =~ ^(rocky|almalinux|centos)$ ]]; then
+    REPO_BASE="rhel"
+else
+    REPO_BASE="$OS_ID"
+fi
+
 # Instalação para sistemas RHEL-based
 install_rhel_agent() {
-    rpm -Uvh "https://repo.zabbix.com/zabbix/${ZBX_VERSION}/${OS_ID}/${OS_VER}/${ARCH}/zabbix-release-${ZBX_VERSION}-1.el${OS_VER}.noarch.rpm"
+    rpm -Uvh "https://repo.zabbix.com/zabbix/${ZBX_VERSION}/${REPO_BASE}/${OS_VER}/${ARCH}/zabbix-release-${ZBX_VERSION}-1.el${OS_VER}.noarch.rpm"
     dnf clean all
     dnf install -y "$ZBX_AGENT"
 }
@@ -48,16 +55,17 @@ install_debian_agent() {
 }
 
 # Executar instalação de acordo com o sistema
-if [[ "$ID" =~ ^(rhel|centos|rocky|almalinux|fedora)$ ]]; then
+if [[ "$OS_ID" =~ ^(rhel|centos|rocky|almalinux|fedora)$ ]]; then
     install_rhel_agent
-elif [[ "$ID" =~ ^(debian|ubuntu)$ ]]; then
+elif [[ "$OS_ID" =~ ^(debian|ubuntu)$ ]]; then
     install_debian_agent
 else
-    echo "❌ Sistema $ID não suportado."
+    echo "❌ Sistema $OS_ID não suportado."
     exit 1
 fi
 
 CONF_FILE="/etc/zabbix/${ZBX_AGENT}.conf"
+
 # Editar config
 sed -i "s|^Server=.*|Server=${ZBX_SERVER}|" "$CONF_FILE"
 sed -i "s|^ServerActive=.*|ServerActive=${ZBX_PROXY:-$ZBX_SERVER}|" "$CONF_FILE"
