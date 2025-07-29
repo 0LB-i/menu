@@ -39,9 +39,32 @@ else
     REPO_BASE="$OS_ID"
 fi
 
+# Buscar última subversão (patch) do Zabbix release
+get_latest_patch_version() {
+    local base_version="$1"
+    local repo_url="https://repo.zabbix.com/zabbix/${base_version}/${REPO_BASE}/${OS_VER}/${ARCH}/"
+    local pkg_prefix="zabbix-release-${base_version}"
+
+    echo "🔍 Verificando a versão mais recente de patch para $base_version..."
+
+    latest_patch=$(curl -s "$repo_url" | \
+        grep -oP "${pkg_prefix}-\K[0-9]+(?=\.el${OS_VER}\.noarch\.rpm)" | \
+        sort -nr | head -n1)
+
+    if [[ -z "$latest_patch" ]]; then
+        echo "❌ Não foi possível localizar a subversão do pacote. Verifique a versão digitada."
+        exit 1
+    fi
+
+    echo "📦 Subversão detectada: ${base_version}.${latest_patch}"
+    ZBX_VERSION_FULL="${base_version}.${latest_patch}"
+}
+
+get_latest_patch_version "$ZBX_VERSION"
+
 # Instalação para sistemas RHEL-based
 install_rhel_agent() {
-    rpm -Uvh "https://repo.zabbix.com/zabbix/${ZBX_VERSION}/${REPO_BASE}/${OS_VER}/${ARCH}/zabbix-release-${ZBX_VERSION}-1.el${OS_VER}.noarch.rpm"
+    rpm -Uvh "https://repo.zabbix.com/zabbix/${ZBX_VERSION}/${REPO_BASE}/${OS_VER}/${ARCH}/zabbix-release-${ZBX_VERSION_FULL}-1.el${OS_VER}.noarch.rpm"
     dnf clean all
     dnf install -y "$ZBX_AGENT"
 }
