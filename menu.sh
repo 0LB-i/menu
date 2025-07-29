@@ -12,7 +12,7 @@ check_whiptail() {
 
 menu_scripts() {
     while true; do
-        OPCAO=$(whiptail --title "Menu de Scripts - Gabriel (0LB-i)" --menu "Escolha um script para executar:" 15 60 7 \
+        OPCAO=$(whiptail --title "Menu de Scripts - Gabriel (0LB-i)" --menu "Escolha um script para executar:" 15 60 8 \
             "0" "Sair" \
             "1" "Conf inicial" \
             "2" "Corrigir repositórios CentOS 7" \
