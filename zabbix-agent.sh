@@ -39,7 +39,7 @@ else
     REPO_BASE="$OS_ID"
 fi
 
-# Buscar última subversão (patch) do Zabbix release
+# Buscar última subversão (patch) do Zabbix agent
 get_latest_agent_version() {
     local base_version="$1"  # ex: 5.0
     local repo_url="https://repo.zabbix.com/zabbix/${base_version}/${REPO_BASE}/${OS_VER}/${ARCH}/"
@@ -47,8 +47,8 @@ get_latest_agent_version() {
     echo "🔍 Buscando a versão mais recente do agente para $base_version..."
 
     latest_agent_version=$(curl -s "$repo_url" | \
-        grep -oP "zabbix-agent(-2)?-${base_version}\.[0-9.]+-1\.el${OS_VER}\.${ARCH}\.rpm" | \
-        sed -E "s/zabbix-agent(-2)?-(${base_version}\.[0-9.]+)-1\.el${OS_VER}\.${ARCH}\.rpm/\2/" | \
+        grep -oP "${ZBX_AGENT}-${base_version}\.[0-9.]+-1\.el${OS_VER}\.${ARCH}\.rpm" | \
+        sed -E "s/${ZBX_AGENT}-(${base_version}\.[0-9.]+)-1\.el${OS_VER}\.${ARCH}\.rpm/\1/" | \
         sort -V | tail -n1)
 
     if [[ -z "$latest_agent_version" ]]; then
@@ -60,21 +60,25 @@ get_latest_agent_version() {
     ZBX_AGENT_VERSION_FULL="$latest_agent_version"
 }
 
-get_latest_patch_version "$ZBX_VERSION"
+get_latest_agent_version "$ZBX_VERSION"
 
 # Instalação para sistemas RHEL-based
 install_rhel_agent() {
-    rpm -Uvh "https://repo.zabbix.com/zabbix/${ZBX_VERSION}/${REPO_BASE}/${OS_VER}/${ARCH}/zabbix-release-${ZBX_VERSION_FULL}-1.el${OS_VER}.noarch.rpm"
-    dnf clean all
-    dnf install -y "$ZBX_AGENT"
+    local agent_pkg="${ZBX_AGENT}-${ZBX_AGENT_VERSION_FULL}-1.el${OS_VER}.${ARCH}.rpm"
+    local url="https://repo.zabbix.com/zabbix/${ZBX_VERSION}/${REPO_BASE}/${OS_VER}/${ARCH}/${agent_pkg}"
+    echo "⬇️ Baixando: $url"
+    curl -LO "$url"
+    rpm -Uvh "$agent_pkg"
 }
 
 # Instalação para sistemas Debian-based
 install_debian_agent() {
-    wget "https://repo.zabbix.com/zabbix/${ZBX_VERSION}/${OS_ID}/pool/main/z/zabbix-release/zabbix-release_${ZBX_VERSION}-1+${OS_ID}${OS_VER}_all.deb" -O /tmp/zabbix-release.deb
-    dpkg -i /tmp/zabbix-release.deb
-    apt update
-    apt install -y "$ZBX_AGENT"
+    local agent_pkg="${ZBX_AGENT}_${ZBX_AGENT_VERSION_FULL}-1+${OS_ID}${OS_VER}_${ARCH}.deb"
+    local url="https://repo.zabbix.com/zabbix/${ZBX_VERSION}/${OS_ID}/pool/main/z/zabbix/${agent_pkg}"
+    echo "⬇️ Baixando: $url"
+    wget -O "/tmp/${agent_pkg}" "$url"
+    dpkg -i "/tmp/${agent_pkg}"
+    apt-get install -f -y
 }
 
 # Executar instalação de acordo com o sistema
