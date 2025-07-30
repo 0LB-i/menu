@@ -91,7 +91,11 @@ else
     exit 1
 fi
 
-CONF_FILE="/etc/zabbix/${ZBX_AGENT}.conf"
+if [[ "$ZBX_AGENT" == "zabbix-agent" ]]; then
+    CONF_FILE="/etc/zabbix/zabbix_agentd.conf"
+else
+    CONF_FILE="/etc/zabbix/${ZBX_AGENT}.conf"
+fi
 
 # Editar config
 sed -i "s|^Server=.*|Server=${ZBX_SERVER}|" "$CONF_FILE"
