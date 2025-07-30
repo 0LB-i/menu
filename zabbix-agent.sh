@@ -47,8 +47,8 @@ get_latest_agent_version() {
     echo "🔍 Buscando a versão mais recente do agente para $base_version..."
 
     latest_agent_version=$(curl -s "$repo_url" | \
-        grep -oP "zabbix-agent(-2)?-${base_version}\.[0-9]+-1\.el${OS_VER}\.${ARCH}\.rpm" | \
-        sed -E "s/zabbix-agent(-2)?-(${base_version}\.[0-9]+)-1\.el${OS_VER}\.${ARCH}\.rpm/\2/" | \
+        grep -oP "zabbix-agent(-2)?-${base_version}\.[0-9.]+-1\.el${OS_VER}\.${ARCH}\.rpm" | \
+        sed -E "s/zabbix-agent(-2)?-(${base_version}\.[0-9.]+)-1\.el${OS_VER}\.${ARCH}\.rpm/\2/" | \
         sort -V | tail -n1)
 
     if [[ -z "$latest_agent_version" ]]; then
