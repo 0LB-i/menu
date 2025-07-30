@@ -91,16 +91,24 @@ else
     exit 1
 fi
 
-if [[ "$ZBX_AGENT" == "zabbix-agent" ]]; then
-    CONF_FILE="/etc/zabbix/zabbix_agentd.conf"
-else
-    CONF_FILE="/etc/zabbix/${ZBX_AGENT}.conf"
-fi
+set_conf_file() {
+    if [[ "$ZBX_AGENT" == "zabbix-agent" ]]; then
+        CONF_FILE="/etc/zabbix/zabbix_agentd.conf"
+    else
+        CONF_FILE="/etc/zabbix/${ZBX_AGENT}.conf"
+    fi
+}
+set_conf_file
 
 # Editar config
-sed -i "s|^Server=.*|Server=${ZBX_SERVER}|" "$CONF_FILE"
-sed -i "s|^ServerActive=.*|ServerActive=${ZBX_PROXY:-$ZBX_SERVER}|" "$CONF_FILE"
-sed -i "s|^Hostname=.*|Hostname=${ZBX_HOSTNAME}|" "$CONF_FILE"
+if [[ -f "$CONF_FILE" ]]; then
+    sed -i "s|^Server=.*|Server=${ZBX_SERVER}|" "$CONF_FILE"
+    sed -i "s|^ServerActive=.*|ServerActive=${ZBX_PROXY:-$ZBX_SERVER}|" "$CONF_FILE"
+    sed -i "s|^Hostname=.*|Hostname=${ZBX_HOSTNAME}|" "$CONF_FILE"
+else
+    echo "❌ Arquivo de configuração não encontrado: $CONF_FILE"
+    exit 1
+fi
 
 systemctl enable "$ZBX_AGENT"
 systemctl restart "$ZBX_AGENT"
