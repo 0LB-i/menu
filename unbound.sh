@@ -26,16 +26,43 @@ sed -i -e 's/num-threads: 4/num-threads: 8/' \
        -e 's/# ip-ratelimit-factor: 10/ip-ratelimit-factor: 1/' \
        -e 's|# root-hints: ""|root-hints: "/var/lib/unbound/root.hints"|' \
        -e 's|# logfile: ""|logfile: "/var/log/unbound.log"|' \
+       -e 's/# hide-identity: no/hide-identity: yes/' \
+       -e 's/# hide-version: no/hide-version: yes/' \
        /etc/unbound/unbound.conf
 
 echo "==> Adicionando access-control..."
-sed -i '/# access-control:/a \
-        access-control: 127.0.0.0/8 allow\n\
-        access-control: 10.0.0.0/8 allow\n\
-        access-control: 100.64.0.0/10 allow\n\
-        access-control: 172.16.0.0/12 allow\n\
-        access-control: 192.168.0.0/16 allow\n\
-        access-control: ::1 allow' /etc/unbound/unbound.conf
+# Verifica se já existe a linha "access-control: 10.0.0.0/8 allow"
+insert_access_controls() {
+  local conf_file="/etc/unbound/unbound.conf"
+  local ips=("$@")
+
+  for ip in "${ips[@]}"; do
+    if ! grep -q "^access-control: ${ip} allow" "$conf_file"; then
+      sed -i "/# access-control:/a access-control: ${ip} allow" "$conf_file"
+    fi
+  done
+}
+
+# Lista padrão
+ips=(
+  "127.0.0.0/8"
+  "10.0.0.0/8"
+  "100.64.0.0/10"
+  "172.16.0.0/12"
+  "192.168.0.0/16"
+  "::1"
+)
+
+read -p "Quer adicionar IPs extras para access-control? Separe por espaço ou deixe vazio para pular: " extra_ips
+
+if [[ -n "$extra_ips" ]]; then
+  # Divide string em array e adiciona à lista padrão
+  for ip in $extra_ips; do
+    ips+=("$ip")
+  done
+fi
+
+insert_access_controls "${ips[@]}"
 
 echo "==> Baixando root.hints..."
 curl -s -o /var/lib/unbound/root.hints https://www.internic.net/domain/named.cache
@@ -64,9 +91,10 @@ unbound-control-setup
 
 echo "==> Reiniciando unbound..."
 systemctl restart unbound
+systemctl enable unbound
 
 echo "==> Instalando e configurando Zabbix Agent..."
-bash <(curl -s https://raw.githubusercontent.com/0LB-i/menu/main/zabbix-agent.sh)
+# bash <(curl -s https://raw.githubusercontent.com/0LB-i/menu/main/zabbix-agent.sh)
 
 echo "==> Criando userparameter para Unbound no Zabbix Agent..."
 cat << 'EOF' > /etc/zabbix/zabbix_agentd.d/userparameter_unbound.conf
@@ -81,6 +109,9 @@ UserParameter=unbound.histogram[*],sudo /usr/sbin/unbound-control stats_noreset 
 UserParameter=unbound.histogram.total[*],sudo /usr/sbin/unbound-control stats_noreset | grep histogram.$1= | cut -d= -f2
 UserParameter=unbound.ips.abuso,cat /var/log/unbound.log | grep ratelimit | grep -v for | grep -v through | sort -r | awk '{print "DATA: " $1, $2, "HORA: " $3, "Abuso de DNS do IP: " $8}'
 EOF
+
+echo "==> Reiniciando Zabbix Agent..."
+systemctl restart zabbix-agent
 
 echo "==> Configurando sudoers para Zabbix..."
 cat << 'EOF' >> /etc/sudoers
