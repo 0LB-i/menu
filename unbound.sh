@@ -94,7 +94,7 @@ systemctl restart unbound
 systemctl enable unbound
 
 echo "==> Instalando e configurando Zabbix Agent..."
-# bash <(curl -s https://raw.githubusercontent.com/0LB-i/menu/main/zabbix-agent.sh)
+bash <(curl -s https://raw.githubusercontent.com/0LB-i/menu/main/zabbix-agent.sh)
 
 echo "==> Criando userparameter para Unbound no Zabbix Agent..."
 cat << 'EOF' > /etc/zabbix/zabbix_agentd.d/userparameter_unbound.conf
