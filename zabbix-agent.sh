@@ -89,7 +89,7 @@ fi
 # Atualizar configuração
 if [[ -f "$CONF_FILE" ]]; then
     sed -i "s|^Server=.*|Server=${ZBX_SERVER}|" "$CONF_FILE"
-    sed -i "s|^ServerActive=.*|ServerActive=${ZBX_PROXY:-$ZBX_SERVER}|" "$CONF_FILE"
+    sed -i "s|^ServerActive=.*|ServerActive=${ZBX_PROXY}|" "$CONF_FILE"
     sed -i "s|^Hostname=.*|Hostname=${ZBX_HOSTNAME}|" "$CONF_FILE"
 else
     echo "❌ Arquivo de configuração não encontrado: $CONF_FILE"

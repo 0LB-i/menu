@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "==> Instalando pacotes..."
+echo "==> Instalahttps://www.empregos.com.br/vaga/10817321/desenvolvedor-de-software-trainee-em-lajeado-rs-CK10817321IN?Origem=L554&bb_click_id=e948d1d3ndo pacotes..."
 yum install -y unbound logrotate curl
 
 echo "==> Ajustando unbound.conf..."
@@ -31,16 +31,25 @@ sed -i -e 's/num-threads: 4/num-threads: 8/' \
        /etc/unbound/unbound.conf
 
 echo "==> Adicionando access-control..."
-# Verifica se já existe a linha "access-control: 10.0.0.0/8 allow"
 insert_access_controls() {
   local conf_file="/etc/unbound/unbound.conf"
   local ips=("$@")
 
+  # Se já existe pelo menos 1 linha access-control, sai
+  if grep -q "^access-control:" "$conf_file"; then
+    echo "Linhas access-control já existem no arquivo, pulando inserção."
+    return
+  fi
+
+  # Monta o bloco inteiro para inserir
+  local block=""
   for ip in "${ips[@]}"; do
-    if ! grep -q "^access-control: ${ip} allow" "$conf_file"; then
-      sed -i "/# access-control:/a access-control: ${ip} allow" "$conf_file"
-    fi
+    block+="        access-control: ${ip} allow\n"
   done
+
+  # Insere bloco todo abaixo do primeiro "# access-control:"
+  sed -i "/# access-control:/a\\
+$block" "$conf_file"
 }
 
 # Lista padrão
@@ -56,7 +65,6 @@ ips=(
 read -p "Quer adicionar IPs extras para access-control? Separe por espaço ou deixe vazio para pular: " extra_ips
 
 if [[ -n "$extra_ips" ]]; then
-  # Divide string em array e adiciona à lista padrão
   for ip in $extra_ips; do
     ips+=("$ip")
   done
@@ -110,14 +118,13 @@ UserParameter=unbound.histogram.total[*],sudo /usr/sbin/unbound-control stats_no
 UserParameter=unbound.ips.abuso,cat /var/log/unbound.log | grep ratelimit | grep -v for | grep -v through | sort -r | awk '{print "DATA: " $1, $2, "HORA: " $3, "Abuso de DNS do IP: " $8}'
 EOF
 
-echo "==> Reiniciando Zabbix Agent..."
-systemctl restart zabbix-agent
-
-echo "==> Configurando sudoers para Zabbix..."
 cat << 'EOF' >> /etc/sudoers
 Defaults:zabbix !requiretty
 zabbix ALL = NOPASSWD: /usr/sbin/unbound-control
 EOF
+
+echo "==> Reiniciando Zabbix Agent..."
+systemctl restart zabbix-agent
 
 echo "==> Verificando status do Unbound..."
 systemctl status unbound --no-pager
