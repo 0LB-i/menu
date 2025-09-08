@@ -12,7 +12,7 @@ check_whiptail() {
 
 menu_scripts() {
     while true; do
-        OPCAO=$(whiptail --title "Menu de Scripts - Gabriel (0LB-i)" --menu "Escolha um script para executar:" 15 60 9 \
+        OPCAO=$(whiptail --title "Menu de Scripts - Gabriel (0LB-i)" --menu "Escolha um script para executar:" 15 60 10 \
             "0" "Sair" \
             "1" "Conf inicial" \
             "2" "Corrigir repositórios CentOS 7" \
@@ -22,6 +22,7 @@ menu_scripts() {
             "6" "Instalar Speedtest" \
             "7" "Instalar Bacula-fd em distros Rhel 9" \
             "8" "Instalar Unbound" \
+            "9" "Configuração do rc.local Ubunto" \
             3>&1 1>&2 2>&3)
         RET=$?
 
@@ -58,6 +59,9 @@ menu_scripts() {
                 ;;
             8)
                 bash <(curl -s https://raw.githubusercontent.com/0LB-i/menu/main/unbound.sh)
+                ;;
+            9)
+                bash <(curl -s https://raw.githubusercontent.com/Martiniti-ansible/rc-local-ubunto/main/rc-local-ubunto.sh)
                 ;;
             *)
                 whiptail --msgbox "Opção inválida!" 8 30
