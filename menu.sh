@@ -22,7 +22,7 @@ menu_scripts() {
             "6" "Instalar Speedtest" \
             "7" "Instalar Bacula-fd em distros Rhel 9" \
             "8" "Instalar Unbound" \
-            "9" "Configuração do rc.local Ubunto" \
+            "9" "Configuração do rc.local Ubuntu" \
             3>&1 1>&2 2>&3)
         RET=$?
 
@@ -61,7 +61,7 @@ menu_scripts() {
                 bash <(curl -s https://raw.githubusercontent.com/0LB-i/menu/main/unbound.sh)
                 ;;
             9)
-                bash <(curl -s https://raw.githubusercontent.com/Martiniti-ansible/rc-local-ubunto/main/rc-local-ubunto.sh)
+                bash <(curl -s https://raw.githubusercontent.com/0LB-i/menu/main/rclocal-ubuntu.sh)
                 ;;
             *)
                 whiptail --msgbox "Opção inválida!" 8 30
