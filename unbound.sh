@@ -31,43 +31,39 @@ sed -i -e 's/num-threads: 4/num-threads: 8/' \
        /etc/unbound/unbound.conf
 
 echo "==> Adicionando access-control..."
+
 insert_access_controls() {
-  local conf_file="/etc/unbound/unbound.conf"
-  local ips=("$@")
+    local conf_file="/etc/unbound/unbound.conf"
+    local ips=("$@")
 
-  # Se já existe pelo menos 1 linha access-control, sai
-  if grep -q "^access-control:" "$conf_file"; then
-    echo "Linhas access-control já existem no arquivo, pulando inserção."
-    return
-  fi
-
-  # Monta o bloco inteiro para inserir
-  local block=""
-  for ip in "${ips[@]}"; do
-    block+="        access-control: ${ip} allow\n"
-  done
-
-  # Insere bloco todo abaixo do primeiro "# access-control:"
-  sed -i "/# access-control:/a\\
-$block" "$conf_file"
+    for ip in "${ips[@]}"; do
+        # Verifica se o IP já está configurado
+        if grep -q "^\s*access-control: ${ip} allow" "$conf_file"; then
+            echo "IP ${ip} já existe no arquivo, pulando..."
+        else
+            # Insere abaixo do primeiro "# access-control:"
+            sed -i "/# access-control:/a\\
+        access-control: ${ip} allow" "$conf_file"
+            echo "IP ${ip} adicionado ao arquivo."
+        fi
+    done
 }
 
-# Lista padrão
+# Lista padrão de IPs
 ips=(
-  "127.0.0.0/8"
-  "10.0.0.0/8"
-  "100.64.0.0/10"
-  "172.16.0.0/12"
-  "192.168.0.0/16"
-  "::1"
+    "127.0.0.0/8"
+    "10.0.0.0/8"
+    "100.64.0.0/10"
+    "172.16.0.0/12"
+    "192.168.0.0/16"
+    "::1"
 )
 
 read -p "Quer adicionar IPs extras para access-control? Separe por espaço ou deixe vazio para pular: " extra_ips
-
 if [[ -n "$extra_ips" ]]; then
-  for ip in $extra_ips; do
-    ips+=("$ip")
-  done
+    for ip in $extra_ips; do
+        ips+=("$ip")
+    done
 fi
 
 insert_access_controls "${ips[@]}"
