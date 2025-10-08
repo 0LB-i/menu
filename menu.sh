@@ -12,7 +12,7 @@ check_whiptail() {
 
 menu_scripts() {
     while true; do
-        OPCAO=$(whiptail --title "Menu de Scripts - Gabriel (0LB-i)" --menu "Escolha um script para executar:" 15 60 10 \
+        OPCAO=$(whiptail --title "Menu de Scripts - Gabriel (0LB-i)" --menu "Escolha um script para executar:" 20 60 10 \
             "0" "Sair" \
             "1" "Conf inicial" \
             "2" "Corrigir repositórios CentOS 7" \
@@ -23,6 +23,7 @@ menu_scripts() {
             "7" "Instalar Bacula-fd em distros Rhel 9" \
             "8" "Instalar Unbound" \
             "9" "Configuração do rc.local Ubuntu" \
+            "10" "Configuração de Dump do Zabbix" \
             3>&1 1>&2 2>&3)
         RET=$?
 
@@ -40,28 +41,31 @@ menu_scripts() {
                 bash <(curl -s https://raw.githubusercontent.com/0LB-i/menu/main/conf-ini.sh)
                 ;;
             2)
-                bash <(curl -s https://raw.githubusercontent.com/0LB-i/fix-centos-repos/main/fix-centos-repos.sh)
+                bash <(curl -s https://raw.githubusercontent.com/0LB-i/menu/main/fix-centos-repos.sh)
                 ;;
             3)
                 bash <(curl -s https://raw.githubusercontent.com/0LB-i/menu/main/zabbix-agent.sh)
                 ;;
             4)
-                bash <(curl -s https://raw.githubusercontent.com/0LB-i/unifi-server-script/main/install-unifi-server.sh)
+                bash <(curl -s https://raw.githubusercontent.com/0LB-i/menu/main/unifi.sh)
                 ;;
             5)
-                bash <(curl -s https://raw.githubusercontent.com/0LB-i/zabbix-server/main/zabbix-server.sh)
+                bash <(curl -s https://raw.githubusercontent.com/0LB-i/menu/main/zabbix-server.sh)
                 ;;
             6)
-                bash <(curl -s https://raw.githubusercontent.com/0LB-i/speedtest-script/main/install-speedtest.sh)
+                bash <(curl -s https://raw.githubusercontent.com/0LB-i/menu/main/speedtest.sh)
                 ;;
             7)
-                bash <(curl -s https://raw.githubusercontent.com/0LB-i/bacula-fd/main/bacula-fd.sh)
+                bash <(curl -s https://raw.githubusercontent.com/0LB-i/menu/main/bacula-fd.sh)
                 ;;
             8)
                 bash <(curl -s https://raw.githubusercontent.com/0LB-i/menu/main/unbound.sh)
                 ;;
             9)
                 bash <(curl -s https://raw.githubusercontent.com/0LB-i/menu/main/rclocal-ubuntu.sh)
+                ;;
+            10)
+                bash <(curl -s https://raw.githubusercontent.com/0LB-i/menu/main/dump-zabbix.sh)
                 ;;
             *)
                 whiptail --msgbox "Opção inválida!" 8 30
