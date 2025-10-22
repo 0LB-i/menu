@@ -48,6 +48,33 @@ dnf install -y postgresql16 postgresql16-server
 echo "➤ Inicializando PostgreSQL 16..."
 /usr/pgsql-16/bin/postgresql-16-setup initdb
 systemctl enable --now postgresql-16
+
+# ▶ Otimização do PostgreSQL (melhoria 1)
+PG_CONF="/var/lib/pgsql/16/data/postgresql.conf"
+echo "➤ Otimizando parâmetros do PostgreSQL para Zabbix..."
+
+cat <<EOF >> "$PG_CONF"
+
+# ────────────────────────────────
+# Ajustes de performance - Zabbix
+# ────────────────────────────────
+shared_buffers = 2GB
+work_mem = 32MB
+maintenance_work_mem = 512MB
+effective_cache_size = 4GB
+wal_buffers = 16MB
+checkpoint_timeout = 15min
+max_wal_size = 4GB
+min_wal_size = 1GB
+random_page_cost = 1.1
+effective_io_concurrency = 200
+autovacuum_vacuum_scale_factor = 0.05
+autovacuum_analyze_scale_factor = 0.02
+autovacuum_vacuum_cost_limit = 400
+autovacuum_max_workers = 6
+max_connections = 200
+EOF
+
 systemctl restart postgresql-16
 
 # ▶ Instalação do Zabbix
@@ -72,12 +99,27 @@ zcat /usr/share/zabbix/sql-scripts/postgresql/server.sql.gz | sudo -u zabbix /us
 ZBX_CONF="/etc/zabbix/zabbix_server.conf"
 echo "➤ Atualizando configurações no zabbix_server.conf..."
 
+echo "➤ Ajustando parâmetros de desempenho do Zabbix..."
 sed -i "s/^# DBPassword=.*/DBPassword=$ZBX_DB_PASS/" "$ZBX_CONF"
-sed -i "/^#\?CacheSize=/c\CacheSize=512M" "$ZBX_CONF"
+sed -i "/^#\?StartDBSyncers=/c\StartDBSyncers=8" "$ZBX_CONF"
+sed -i "/^#\?StartDiscoverers=/c\StartDiscoverers=3" "$ZBX_CONF"
+sed -i "/^#\?StartTrappers=/c\StartTrappers=5" "$ZBX_CONF"
+sed -i "/^#\?HistoryCacheSize=/c\HistoryCacheSize=128M" "$ZBX_CONF"
+sed -i "/^#\?HistoryIndexCacheSize=/c\HistoryIndexCacheSize=32M" "$ZBX_CONF"
+sed -i "/^#\?TrendCacheSize=/c\TrendCacheSize=64M" "$ZBX_CONF"
+sed -i "/^#\?ValueCacheSize=/c\ValueCacheSize=128M" "$ZBX_CONF"
+sed -i "/^#\?CacheSize=/c\CacheSize=1024M" "$ZBX_CONF"
 sed -i "/^#\?StartPingers=/c\StartPingers=10" "$ZBX_CONF"
 sed -i "/^#\?StartPollers=/c\StartPollers=10" "$ZBX_CONF"
-sed -i "/^#\?StartPollersUnreachable=/c\StartPollersUnreachable=8" "$ZBX_CONF"
+sed -i "/^#\?StartPollersUnreachable=/c\StartPollersUnreachable=10" "$ZBX_CONF"
 sed -i "/^#\?Timeout=/c\Timeout=30" "$ZBX_CONF"
+
+# ▶ Evitar sobrecarga do Housekeeper
+echo "➤ Ajustando parâmetros do Housekeeper..."
+sed -i "/^#\?HousekeepingFrequency=/c\HousekeepingFrequency=12" "$ZBX_CONF"
+sed -i "/^#\?MaxHousekeeperDelete=/c\MaxHousekeeperDelete=1000000" "$ZBX_CONF"
+sed -i "/^#\?HistoryStoragePeriod=/c\HistoryStoragePeriod=90d" "$ZBX_CONF"
+sed -i "/^#\?TrendStoragePeriod=/c\TrendStoragePeriod=365d" "$ZBX_CONF"
 
 # ▶ Plugins adicionais
 echo "➤ Instalando plugins adicionais do zabbix-agent2..."
@@ -86,6 +128,15 @@ dnf install -y zabbix-agent2-plugin-postgresql
 # ▶ Ativação de serviços
 echo "➤ Habilitando e iniciando serviços..."
 systemctl enable --now zabbix-server zabbix-agent2 httpd php-fpm
+
+# ▶ Manutenção automática do banco
+echo "➤ Configurando manutenção automática do banco de dados..."
+cat <<'EOF' > /etc/cron.d/zabbix_db_maintenance
+# Otimização automática do banco Zabbix
+30 2 * * 4 postgres /usr/pgsql-16/bin/vacuumdb --analyze zabbix
+30 4 * * 0 postgres /usr/pgsql-16/bin/reindexdb zabbix
+EOF
+chmod 644 /etc/cron.d/zabbix_db_maintenance
 
 # ▶ Backup automático do banco de dados
 read -p "Deseja configurar o backup automático do banco de dados do Zabbix? [s/N]: " CONFIG_DUMP
