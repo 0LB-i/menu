@@ -18,8 +18,8 @@ sed -i \
   -e 's/# so-sndbuf:.*/so-sndbuf: 4m/' \
   -e 's/# interface: 0.0.0.0$/interface: 0.0.0.0/' \
   -e 's/# interface: ::0$/interface: ::0/' \
-  -e 's/# interface: 192\.0\.2\.153/interface: 0.0.0.0@853/' \
-  -e 's/# interface: 192\.0\.2\.154/interface: ::0@853/' \
+  -e 's/# interface: 192\.0\.2\.153$/interface: 0.0.0.0@853/' \
+  -e 's/# interface: 192\.0\.2\.154$/interface: ::0@853/' \
   -e 's|# tls-service-key:.*|tls-service-key: "/etc/unbound/unbound_server.key"|' \
   -e 's|# tls-service-pem:.*|tls-service-pem: "/etc/unbound/unbound_server.pem"|' \
   -e 's/# tls-port:.*/tls-port: 853/' \
