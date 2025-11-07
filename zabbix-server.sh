@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # ─────────────────────────────────────────────────────────────
 # Script para instalar o Zabbix Server com PostgreSQL 16
 # Compatível com AlmaLinux 9 e Rocky Linux 9
@@ -49,7 +48,7 @@ echo "➤ Inicializando PostgreSQL 16..."
 /usr/pgsql-16/bin/postgresql-16-setup initdb
 systemctl enable --now postgresql-16
 
-# ▶ Otimização do PostgreSQL (melhoria 1)
+# ▶ Otimização do PostgreSQL
 PG_CONF="/var/lib/pgsql/16/data/postgresql.conf"
 echo "➤ Otimizando parâmetros do PostgreSQL para Zabbix..."
 

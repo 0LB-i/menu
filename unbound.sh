@@ -5,30 +5,34 @@ echo "==> Instalahttps://www.empregos.com.br/vaga/10817321/desenvolvedor-de-soft
 yum install -y unbound logrotate curl
 
 echo "==> Ajustando unbound.conf..."
-sed -i -e 's/num-threads: 4/num-threads: 8/' \
-       -e 's/# msg-cache-slabs: 4/msg-cache-slabs: 8/' \
-       -e 's/# rrset-cache-slabs: 4/rrset-cache-slabs: 8/' \
-       -e 's/# infra-cache-slabs: 4/infra-cache-slabs: 8/' \
-       -e 's/# key-cache-slabs: 4/key-cache-slabs: 8/' \
-       -e 's/# rrset-cache-size: 4m/rrset-cache-size: 512m/' \
-       -e 's/# msg-cache-size: 4m/msg-cache-size: 512m/' \
-       -e 's/# key-cache-size: 4m/key-cache-size: 64m/' \
-       -e 's/# so-rcvbuf: 0/so-rcvbuf: 4m/' \
-       -e 's/# so-sndbuf: 0/so-sndbuf: 4m/' \
-       -e 's/# interface: 0.0.0.0$/interface: 0.0.0.0/' \
-       -e 's/# interface: ::0$/interface: ::0/' \
-       -e 's/interface-automatic: no/interface-automatic: yes/' \
-       -e 's/# outgoing-range: 4096/outgoing-range: 8192/' \
-       -e 's/# num-queries-per-thread: 1024/num-queries-per-thread: 4096/' \
-       -e 's/# cache-max-ttl: 86400/cache-max-ttl: 14400/' \
-       -e 's/# cache-min-ttl: 0/cache-min-ttl: 300/' \
-       -e 's/# ip-ratelimit: 0/ip-ratelimit: 500/' \
-       -e 's/# ip-ratelimit-factor: 10/ip-ratelimit-factor: 1/' \
-       -e 's|# root-hints: ""|root-hints: "/var/lib/unbound/root.hints"|' \
-       -e 's|# logfile: ""|logfile: "/var/log/unbound.log"|' \
-       -e 's/# hide-identity: no/hide-identity: yes/' \
-       -e 's/# hide-version: no/hide-version: yes/' \
-       /etc/unbound/unbound.conf
+sed -i \
+  -e 's/# num-threads:.*/num-threads: 8/' \
+  -e 's/# msg-cache-slabs:.*/msg-cache-slabs: 8/' \
+  -e 's/# rrset-cache-slabs:.*/rrset-cache-slabs: 8/' \
+  -e 's/# infra-cache-slabs:.*/infra-cache-slabs: 8/' \
+  -e 's/# key-cache-slabs:.*/key-cache-slabs: 8/' \
+  -e 's/# rrset-cache-size:.*/rrset-cache-size: 512m/' \
+  -e 's/# msg-cache-size:.*/msg-cache-size: 512m/' \
+  -e 's/# key-cache-size:.*/key-cache-size: 64m/' \
+  -e 's/# so-rcvbuf:.*/so-rcvbuf: 4m/' \
+  -e 's/# so-sndbuf:.*/so-sndbuf: 4m/' \
+  -e 's/# interface: 0.0.0.0$/interface: 0.0.0.0/' \
+  -e 's/# interface: ::0$/interface: ::0/' \
+  -e 's/# interface: 192\.0\.2\.153/interface: 0.0.0.0@853/' \
+  -e 's/# interface: 192\.0\.2\.154/interface: ::0@853/' \
+  -e 's|# tls-service-key:.*|tls-service-key: "/etc/unbound/unbound_server.key"|' \
+  -e 's|# tls-service-pem:.*|tls-service-pem: "/etc/unbound/unbound_server.pem"|' \
+  -e 's/# tls-port:.*/tls-port: 853/' \
+  -e 's/interface-automatic: no/interface-automatic: yes/' \
+  -e 's/# outgoing-range:.*/outgoing-range: 8192/' \
+  -e 's/# num-queries-per-thread:.*/num-queries-per-thread: 4096/' \
+  -e 's/# cache-max-ttl:.*/cache-max-ttl: 14400/' \
+  -e 's/# cache-min-ttl:.*/cache-min-ttl: 300/' \
+  -e 's/# ip-ratelimit:.*/ip-ratelimit: 300/' \
+  -e 's/# ip-ratelimit-factor:.*/ip-ratelimit-factor: 0/' \
+  -e 's|# root-hints: ""|root-hints: "/var/lib/unbound/root.hints"|' \
+  -e 's|# logfile: ""|logfile: "/var/log/unbound.log"|' \
+  /etc/unbound/unbound.conf
 
 echo "==> Adicionando access-control..."
 
