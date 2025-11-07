@@ -42,11 +42,11 @@ insert_access_controls() {
 
     for ip in "${ips[@]}"; do
         # Verifica se o IP já está configurado
-        if grep -q "^\s*access-control: ${ip} allow" "$conf_file"; then
+        if grep -q "^[[:space:]]*access-control:[[:space:]]*${ip}[[:space:]]*allow" "$conf_file"; then
             echo "IP ${ip} já existe no arquivo, pulando..."
         else
-            # Insere abaixo do primeiro "# access-control:"
-            sed -i "/# access-control:/a\\
+            # Insere abaixo da linha '# access-control: 0.0.0.0/0 refuse'
+            sed -i "/# access-control: 0.0.0.0\/0 refuse/a\\
         access-control: ${ip} allow" "$conf_file"
             echo "IP ${ip} adicionado ao arquivo."
         fi
