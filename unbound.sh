@@ -46,7 +46,7 @@ insert_access_controls() {
             echo "IP ${ip} já existe no arquivo, pulando..."
         else
             # Insere abaixo da linha '# access-control: 0.0.0.0/0 refuse'
-            sed -i "/# access-control: 0.0.0.0\/0 refuse/a\\
+            sed -i "/# access-control: 127.0.0.0\80 allow/a\\
         access-control: ${ip} allow" "$conf_file"
             echo "IP ${ip} adicionado ao arquivo."
         fi

@@ -14,7 +14,7 @@ perguntar_hostname() {
 }
 
 instalar_pacotes() {
-    echo "➤ Instalando pacotes essenciais: vim wget ntsysv open-vm-tools net-tools"
+    echo "➤ Instalando pacotes essenciais: vim wget ntsysv open-vm-tools net-tools bind-utils iptables"
     yum install -y vim wget ntsysv open-vm-tools net-tools
 }
 
