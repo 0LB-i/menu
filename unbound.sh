@@ -51,8 +51,7 @@ insert_access_controls() {
         else
             # Insere SEMPRE abaixo do comentário padrão
             sed -i "/^[[:space:]]*# access-control: 0.0.0.0\/0 refuse/a\\
-access-control: ${ip} allow" "$conf_file"
-
+        access-control: ${ip} allow" "$conf_file"
             echo "IP ${ip} adicionado abaixo do access-control padrão."
         fi
     done
