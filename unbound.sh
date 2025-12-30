@@ -41,14 +41,19 @@ insert_access_controls() {
     local ips=("$@")
 
     for ip in "${ips[@]}"; do
-        # Verifica se o IP já está configurado
-        if grep -q "^[[:space:]]*access-control:[[:space:]]*${ip}[[:space:]]*allow" "$conf_file"; then
-            echo "IP ${ip} já existe no arquivo, pulando..."
+        # Escapa IP para uso seguro em regex
+        local ip_escaped
+        ip_escaped=$(printf '%s\n' "$ip" | sed 's/[.[\*^$()+?{|]/\\&/g')
+
+        # Verifica se já existe
+        if grep -Eq "^[[:space:]]*access-control:[[:space:]]*${ip_escaped}[[:space:]]+allow" "$conf_file"; then
+            echo "IP ${ip} já existe, pulando..."
         else
-            # Insere abaixo da linha '# access-control: 0.0.0.0/0 refuse'
-            sed -i "/# access-control: 127.0.0.0\80 allow/a\\
-        access-control: ${ip} allow" "$conf_file"
-            echo "IP ${ip} adicionado ao arquivo."
+            # Insere SEMPRE abaixo do comentário padrão
+            sed -i "/^[[:space:]]*# access-control: 0.0.0.0\/0 refuse/a\\
+access-control: ${ip} allow" "$conf_file"
+
+            echo "IP ${ip} adicionado abaixo do access-control padrão."
         fi
     done
 }
