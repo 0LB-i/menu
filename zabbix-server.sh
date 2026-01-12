@@ -137,6 +137,23 @@ cat <<'EOF' > /etc/cron.d/zabbix_db_maintenance
 EOF
 chmod 644 /etc/cron.d/zabbix_db_maintenance
 
+# ▶ PHP OPcache (melhoria de desempenho do frontend Zabbix)
+dnf install -y php-opcache
+OPCACHE_CONF="/etc/php.d/10-opcache.ini"
+
+cat <<EOF > "$OPCACHE_CONF"
+zend_extension=opcache.so
+opcache.enable=1
+opcache.enable_cli=1
+opcache.memory_consumption=256
+opcache.interned_strings_buffer=16
+opcache.max_accelerated_files=10000
+opcache.revalidate_freq=60
+opcache.validate_timestamps=1
+EOF
+echo "➤ Reiniciando serviços web (php-fpm e httpd)..."
+systemctl restart php-fpm httpd
+
 # ▶ Backup automático do banco de dados
 read -p "Deseja configurar o backup automático do banco de dados do Zabbix? [s/N]: " CONFIG_DUMP
 if [[ "$CONFIG_DUMP" =~ ^[sS]$ ]]; then
