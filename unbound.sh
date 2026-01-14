@@ -49,12 +49,17 @@ insert_access_controls() {
         if grep -Eq "^[[:space:]]*access-control:[[:space:]]*${ip_escaped}[[:space:]]+allow" "$conf_file"; then
             echo "IP ${ip} já existe, pulando..."
         else
-            # Insere abaixo do comentário de referência, ou no final se não existir
-            if grep -q "^[[:space:]]*# access-control: 127.0.0.0/8 allow" "$conf_file"; then
-                sed -i "/^[[:space:]]*# access-control: 127.0.0.0\/8 allow/a access-control: ${ip} allow" "$conf_file"
+            # Procura o comentário de referência
+            local indent
+            indent=$(grep -m1 "^[[:space:]]*# access-control: 127.0.0.0/8 allow" "$conf_file" | sed -E 's/(^ *).*/\1/')
+            
+            if [[ -n "$indent" ]]; then
+                sed -i "/^[[:space:]]*# access-control: 127.0.0.0\/8 allow/a ${indent}access-control: ${ip} allow" "$conf_file"
             else
-                echo "access-control: ${ip} allow" >> "$conf_file"
+                # Se comentário não existir, adiciona com 8 espaços de indentação por padrão
+                echo "        access-control: ${ip} allow" >> "$conf_file"
             fi
+
             echo "IP ${ip} adicionado."
         fi
     done
