@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "==> Instalahttps://www.empregos.com.br/vaga/10817321/desenvolvedor-de-software-trainee-em-lajeado-rs-CK10817321IN?Origem=L554&bb_click_id=e948d1d3ndo pacotes..."
+echo "==> Instalando pacotes..."
 yum install -y unbound logrotate curl
 
 echo "==> Ajustando unbound.conf..."
