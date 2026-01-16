@@ -106,6 +106,22 @@ cat << 'EOF' > /etc/logrotate.d/unbound
 }
 EOF
 
+cat << EOF > /etc/logrotate.d/syslog
+/var/log/messages /var/log/secure {
+    daily
+    rotate 7
+    size 1000M
+    missingok
+    notifempty
+    compress
+    delaycompress
+    sharedscripts
+    postrotate
+        /usr/bin/systemctl reload rsyslog >/dev/null 2>&1 || true
+    endscript
+}
+EOF
+
 echo "==> Configurando unbound-control..."
 unbound-control-setup
 
