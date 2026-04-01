@@ -16,6 +16,12 @@ if [[ "$OS_ID" != "almalinux" && "$OS_ID" != "rocky" ]]; then
   exit 1
 fi
 
+case "$OS_ID" in
+  almalinux) REPO_OS="alma" ;;
+  rocky)     REPO_OS="rocky" ;;
+  *)         REPO_OS="$OS_ID" ;;
+esac
+
 # ▶ Solicita versão do Zabbix
 read -p "Digite a versão do Zabbix que deseja instalar [padrão: 7.0]: " ZBX_VERSION
 ZBX_VERSION=${ZBX_VERSION:-7.0}
@@ -25,8 +31,9 @@ read -s -p "Digite a senha para o usuário 'zabbix' no PostgreSQL: " ZBX_DB_PASS
 echo
 
 # ▶ Adiciona repositório Zabbix de acordo com a distro detectada
-REPO_URL="https://repo.zabbix.com/zabbix/$ZBX_VERSION/release/$OS_ID/9/noarch/zabbix-release-latest-$ZBX_VERSION.el9.noarch.rpm"
-echo "➤ Adicionando repositório Zabbix versão $ZBX_VERSION para $OS_ID..."
+# Mapeia o OS_ID para o nome usado nos repositórios do Zabbix
+REPO_URL="https://repo.zabbix.com/zabbix/$ZBX_VERSION/release/$REPO_OS/9/noarch/zabbix-release-latest-$ZBX_VERSION.el9.noarch.rpm"
+echo "➤ Adicionando repositório Zabbix versão $ZBX_VERSION para $REPO_OS..."
 rpm -Uvh "$REPO_URL" || {
     echo "❌ Erro ao adicionar o repositório. Verifique se a versão está correta."
     exit 1
