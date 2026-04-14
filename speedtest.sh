@@ -2,17 +2,20 @@
 
 # Install and configure OoklaServer
 cd /opt || exit 1
-dnf install wget tar -y
-wget https://install.speedtest.net/ooklaserver/ooklaserver.sh
+dnf install -y wget tar
+wget https://install.speedtest.net/ooklaserver/ooklaserver.sh || { echo "❌ Falha ao baixar ooklaserver.sh."; exit 1; }
 chmod a+x ooklaserver.sh
 ./ooklaserver.sh install -f
 
 # Modify settings in the OoklaServer.properties file
+MAX_THREADS=$(( $(nproc) * 2 ))
+
 sed -i \
-    -e 's/# OoklaServer\.allowedDomains = \*\.ookla\.com, \*\.speedtest\.net/OoklaServer.allowedDomains = \*\.ookla\.com, \*\.speedtest\.net/' \
+    -e 's/# OoklaServer\.allowedDomains = \*\.ookla\.com, \*\.speedtest\.net/OoklaServer.allowedDomains = *.ookla.com, *.speedtest.net/' \
     -e 's/# OoklaServer.enableAutoUpdate = true/OoklaServer.enableAutoUpdate = true/' \
     -e 's/# OoklaServer.ssl.useLetsEncrypt = true/OoklaServer.ssl.useLetsEncrypt = true/' \
-    -e 's/# OoklaServer.ipTracking.maxConnPerIp = 500/OoklaServer.ipTracking.maxConnPerIp = 5/' \
+    -e 's/# OoklaServer.ipTracking.maxConnPerIp = 500/OoklaServer.ipTracking.maxConnPerIp = 50/' \
+    -e "s/# OoklaServer.threadPool.maxThreads =.*/OoklaServer.threadPool.maxThreads = ${MAX_THREADS}/" \
     ./OoklaServer.properties
 
 # Check connectivity with Ookla's API
@@ -45,6 +48,6 @@ WantedBy=multi-user.target
 EOF
 
 # Reload systemd and enable the service to start on boot
-systemctl daemon-reexec
+systemctl daemon-reload
 systemctl daemon-reload
 systemctl enable --now ookla.service

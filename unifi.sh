@@ -17,9 +17,9 @@ gpgkey=https://pgp.mongodb.com/server-8.0.asc
 EOF
 
 # Atualizar e instalar dependências
-yum -y update
-yum install epel-release -y
-yum install mongodb-org java-17-openjdk-devel unzip wget -y
+yum update -y
+yum install -y epel-release
+yum install -y mongodb-org java-17-openjdk-devel unzip wget
 
 useradd ubnt
 
@@ -49,7 +49,7 @@ Type=simple
 User=ubnt
 WorkingDirectory=/opt/UniFi
 # CONF PARA ALMA 9
-ExecStart=/usr/lib/jvm/jre-17/bin/java --add-opens=java.base/java.time=ALL-UNNAMED $JAVA_OPTS -jar /opt/UniFi/lib/ace.jar start
+ExecStart=/usr/lib/jvm/jre-17/bin/java --add-opens=java.base/java.time=ALL-UNNAMED -jar /opt/UniFi/lib/ace.jar start
 # ExecStart=/usr/bin/java -Xmx1024M -jar /opt/UniFi/lib/ace.jar start
 ExecStop=/usr/bin/java -jar /opt/UniFi/lib/ace.jar stop
 SuccessExitStatus=143
@@ -59,7 +59,6 @@ WantedBy=multi-user.target
 EOF
 
 # Habilitar e iniciar o serviço UniFi
-systemctl daemon-reexec
 systemctl daemon-reload
 systemctl enable --now unifi.service
 systemctl status unifi.service --no-pager
