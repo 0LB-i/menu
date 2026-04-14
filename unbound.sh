@@ -5,15 +5,24 @@ echo "==> Instalando pacotes..."
 yum install -y unbound logrotate curl
 
 echo "==> Ajustando unbound.conf..."
+THREADS=$(nproc)
+SLABS=1
+while [[ $SLABS -lt $THREADS ]]; do SLABS=$((SLABS * 2)); done
+
+MEM_MB=$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo)
+MSG_CACHE_MB=$((MEM_MB / 4))
+RRSET_CACHE_MB=$((MSG_CACHE_MB * 2))
+KEY_CACHE_MB=$((MEM_MB / 16))
+
 sed -i \
-  -e 's/# num-threads:.*/num-threads: 8/' \
-  -e 's/# msg-cache-slabs:.*/msg-cache-slabs: 8/' \
-  -e 's/# rrset-cache-slabs:.*/rrset-cache-slabs: 8/' \
-  -e 's/# infra-cache-slabs:.*/infra-cache-slabs: 8/' \
-  -e 's/# key-cache-slabs:.*/key-cache-slabs: 8/' \
-  -e 's/# rrset-cache-size:.*/rrset-cache-size: 512m/' \
-  -e 's/# msg-cache-size:.*/msg-cache-size: 512m/' \
-  -e 's/# key-cache-size:.*/key-cache-size: 64m/' \
+  -e "s/# num-threads:.*/num-threads: ${THREADS}/" \
+  -e "s/# msg-cache-slabs:.*/msg-cache-slabs: ${SLABS}/" \
+  -e "s/# rrset-cache-slabs:.*/rrset-cache-slabs: ${SLABS}/" \
+  -e "s/# infra-cache-slabs:.*/infra-cache-slabs: ${SLABS}/" \
+  -e "s/# key-cache-slabs:.*/key-cache-slabs: ${SLABS}/" \
+  -e "s/# rrset-cache-size:.*/rrset-cache-size: ${RRSET_CACHE_MB}m/" \
+  -e "s/# msg-cache-size:.*/msg-cache-size: ${MSG_CACHE_MB}m/" \
+  -e "s/# key-cache-size:.*/key-cache-size: ${KEY_CACHE_MB}m/" \
   -e 's/# so-rcvbuf:.*/so-rcvbuf: 4m/' \
   -e 's/# so-sndbuf:.*/so-sndbuf: 4m/' \
   -e 's/# interface: 0.0.0.0$/interface: 0.0.0.0/' \
@@ -32,6 +41,13 @@ sed -i \
   -e 's/# ip-ratelimit-factor:.*/ip-ratelimit-factor: 0/' \
   -e 's|# root-hints: ""|root-hints: "/var/lib/unbound/root.hints"|' \
   -e 's|# logfile: ""|logfile: "/var/log/unbound.log"|' \
+  -e '/^[[:space:]]*prefetch:[[:space:]]*yes$/!s/^[# ]*prefetch:.*/prefetch: yes/' \
+  -e '/^[[:space:]]*prefetch-key:[[:space:]]*yes$/!s/^[# ]*prefetch-key:.*/prefetch-key: yes/' \
+  -e '/^[[:space:]]*serve-expired:[[:space:]]*yes$/!s/^[# ]*serve-expired:.*/serve-expired: yes/' \
+  -e '/^[[:space:]]*serve-expired-ttl:[[:space:]]*[^0]/!s/^[# ]*serve-expired-ttl:.*/serve-expired-ttl: 3600/' \
+  -e '/^[[:space:]]*hide-identity:[[:space:]]*yes$/!s/^[# ]*hide-identity:.*/hide-identity: yes/' \
+  -e '/^[[:space:]]*hide-version:[[:space:]]*yes$/!s/^[# ]*hide-version:.*/hide-version: yes/' \
+  -e '/^[[:space:]]*use-caps-for-id:[[:space:]]*yes$/!s/^[# ]*use-caps-for-id:.*/use-caps-for-id: yes/' \
   /etc/unbound/unbound.conf
 
 echo "==> Adicionando access-control..."
@@ -41,26 +57,27 @@ insert_access_controls() {
     local ips=("$@")
 
     for ip in "${ips[@]}"; do
-        # Escapa IP para regex (opcional)
         local ip_escaped
         ip_escaped=$(printf '%s\n' "$ip" | sed 's/[.[\*^$()+?{|]/\\&/g')
 
         # Verifica se já existe
         if grep -Eq "^[[:space:]]*access-control:[[:space:]]*${ip_escaped}[[:space:]]+allow" "$conf_file"; then
             echo "IP ${ip} já existe, pulando..."
-        else
-            # Procura o comentário de referência
-            local indent
-            indent=$(grep -m1 "^[[:space:]]*# access-control: 127.0.0.0/8 allow" "$conf_file" | sed -E 's/(^ *).*/\1/')
-            
-            if [[ -n "$indent" ]]; then
-                sed -i "/^[[:space:]]*# access-control: 127.0.0.0\/8 allow/a ${indent}access-control: ${ip} allow" "$conf_file"
-            else
-                # Se comentário não existir, adiciona com 8 espaços de indentação por padrão
-                echo "        access-control: ${ip} allow" >> "$conf_file"
-            fi
+            continue
+        fi
 
+        # Encontra a última linha com access-control (comentada ou não)
+        local last_line
+        last_line=$(grep -n "access-control:" "$conf_file" | tail -1 | cut -d: -f1)
+
+        if [[ -n "$last_line" ]]; then
+            local indent
+            indent=$(sed -n "${last_line}p" "$conf_file" | sed -E 's/(^[[:space:]]*).*/\1/')
+            sed -i "${last_line}a\\${indent}access-control: ${ip} allow" "$conf_file"
             echo "IP ${ip} adicionado."
+        else
+            echo "❌ Seção access-control não encontrada em $conf_file."
+            exit 1
         fi
     done
 }
@@ -110,7 +127,6 @@ cat << EOF > /etc/logrotate.d/syslog
 /var/log/messages /var/log/secure {
     daily
     rotate 7
-    size 1000M
     missingok
     notifempty
     compress
@@ -130,10 +146,19 @@ systemctl restart unbound
 systemctl enable unbound
 
 echo "==> Instalando e configurando Zabbix Agent..."
-bash <(curl -s https://raw.githubusercontent.com/0LB-i/menu/main/zabbix-agent.sh)
+bash <(curl -s https://raw.githubusercontent.com/0LB-i/menu/main/zabbix-agent.sh) || { echo "❌ Falha na instalação do Zabbix Agent."; exit 1; }
+
+# Detectar qual agente foi instalado
+if systemctl list-unit-files | grep -q "^zabbix-agent2.service"; then
+    ZBX_AGENT="zabbix-agent2"
+    ZBX_AGENT_CONF_DIR="/etc/zabbix/zabbix_agent2.d"
+else
+    ZBX_AGENT="zabbix-agent"
+    ZBX_AGENT_CONF_DIR="/etc/zabbix/zabbix_agentd.d"
+fi
 
 echo "==> Criando userparameter para Unbound no Zabbix Agent..."
-cat << 'EOF' > /etc/zabbix/zabbix_agentd.d/userparameter_unbound.conf
+cat << 'EOF' > "${ZBX_AGENT_CONF_DIR}/userparameter_unbound.conf"
 UserParameter=unbound.type[*],echo -n 0; sudo /usr/sbin/unbound-control stats_noreset | grep num.query.type.$1= | cut -d= -f2
 UserParameter=unbound.mem[*],sudo /usr/sbin/unbound-control stats_noreset | grep mem.$1= | cut -d= -f2
 UserParameter=unbound.flag[*],sudo /usr/sbin/unbound-control stats_noreset | grep num.query.$1= | cut -d= -f2
@@ -142,17 +167,18 @@ UserParameter=unbound.rcode[*],sudo /usr/sbin/unbound-control stats_noreset | gr
 UserParameter=unbound.class[*],sudo /usr/sbin/unbound-control stats_noreset | grep num.query.class.$1= | cut -d= -f2
 UserParameter=unbound.time.up[*],sudo /usr/sbin/unbound-control stats_noreset | grep time.up | cut -d= -f2
 UserParameter=unbound.histogram[*],sudo /usr/sbin/unbound-control stats_noreset | grep histogram.$1= | cut -d= -f2
-UserParameter=unbound.histogram.total[*],sudo /usr/sbin/unbound-control stats_noreset | grep histogram.$1= | cut -d= -f2
-UserParameter=unbound.ips.abuso,cat /var/log/unbound.log | grep ratelimit | grep -v for | grep -v through | sort -r | awk '{print "DATA: " $1, $2, "HORA: " $3, "Abuso de DNS do IP: " $8}'
+UserParameter=unbound.histogram.total[*],sudo /usr/sbin/unbound-control stats_noreset | grep '^histogram\.' | cut -d= -f2 | awk '{s+=$1} END {print s+0}'
+UserParameter=unbound.ips.abuso,grep ratelimit /var/log/unbound.log | grep -v for | grep -v through | sort -r | awk '{print "DATA: " $1, $2, "HORA: " $3, "Abuso de DNS do IP: " $8}'
 EOF
 
-cat << 'EOF' >> /etc/sudoers
+cat << 'EOF' > /etc/sudoers.d/zabbix-unbound
 Defaults:zabbix !requiretty
 zabbix ALL = NOPASSWD: /usr/sbin/unbound-control
 EOF
+chmod 440 /etc/sudoers.d/zabbix-unbound
 
 echo "==> Reiniciando Zabbix Agent..."
-systemctl restart zabbix-agent
+systemctl restart "$ZBX_AGENT"
 
 echo "==> Verificando status do Unbound..."
 systemctl status unbound --no-pager

@@ -24,7 +24,7 @@ if [[ -f /etc/os-release ]]; then
     source /etc/os-release
     OS_ID=$ID
     OS_VER=${VERSION_ID%%.*}
-    ARCH=$(dpkg --print-architecture 2>/dev/null || uname -m)
+    ARCH=$(uname -m)
 else
     echo "❌ Não foi possível detectar a distribuição."
     exit 1
@@ -39,10 +39,10 @@ fi
 
 declare -A ZBX_REPO_RPMS=(
   ["7.4"]="https://repo.zabbix.com/zabbix/7.4/release/rhel/{OS_VER}/noarch/zabbix-release-latest-7.4.el{OS_VER}.noarch.rpm"
-  ["7.0"]="https://repo.zabbix.com/zabbix/7.0/rhel/{OS_VER}/x86_64/zabbix-release-latest-7.0.el{OS_VER}.noarch.rpm"
-  ["6.4"]="https://repo.zabbix.com/zabbix/6.4/rhel/{OS_VER}/x86_64/zabbix-release-latest-6.4.el{OS_VER}.noarch.rpm"
-  ["6.0"]="https://repo.zabbix.com/zabbix/6.0/rhel/{OS_VER}/x86_64/zabbix-release-latest-6.0.el{OS_VER}.noarch.rpm"
-  ["4.4"]="https://repo.zabbix.com/zabbix/4.4/rhel/{OS_VER}/x86_64/zabbix-release-4.4-1.el{OS_VER}.noarch.rpm"
+  ["7.0"]="https://repo.zabbix.com/zabbix/7.0/rhel/{OS_VER}/{ARCH}/zabbix-release-latest-7.0.el{OS_VER}.noarch.rpm"
+  ["6.4"]="https://repo.zabbix.com/zabbix/6.4/rhel/{OS_VER}/{ARCH}/zabbix-release-latest-6.4.el{OS_VER}.noarch.rpm"
+  ["6.0"]="https://repo.zabbix.com/zabbix/6.0/rhel/{OS_VER}/{ARCH}/zabbix-release-latest-6.0.el{OS_VER}.noarch.rpm"
+  ["4.4"]="https://repo.zabbix.com/zabbix/4.4/rhel/{OS_VER}/{ARCH}/zabbix-release-4.4-1.el{OS_VER}.noarch.rpm"
 )
 
 install_rhel_repo() {
@@ -52,6 +52,7 @@ install_rhel_repo() {
     exit 1
   fi
   local url="${url_template//\{OS_VER\}/$OS_VER}"
+  url="${url//\{ARCH\}/$ARCH}"
   echo "Instalando repositório Zabbix para RHEL com link fixo..."
   rpm -Uvh "$url"
   $PKG_MGR clean all
@@ -60,10 +61,11 @@ install_rhel_repo() {
 
 install_debian_repo() {
     echo "Adicionando repositório Zabbix para Debian-based..."
-    wget "https://repo.zabbix.com/zabbix/${ZBX_VERSION}/${OS_ID}/pool/main/z/zabbix/zabbix-release_${ZBX_VERSION}-1+${OS_ID}${OS_VER}_all.deb" -O /tmp/zabbix-release.deb
+    wget "https://repo.zabbix.com/zabbix/${ZBX_VERSION}/${OS_ID}/pool/main/z/zabbix/zabbix-release_${ZBX_VERSION}-1+${OS_ID}${VERSION_ID}_all.deb" -O /tmp/zabbix-release.deb \
+        || { echo "❌ Falha ao baixar pacote Zabbix para ${OS_ID} ${VERSION_ID}."; exit 1; }
     dpkg -i /tmp/zabbix-release.deb
     apt-get update
-    apt-get install -y $ZBX_AGENT
+    apt-get install -y "$ZBX_AGENT"
 }
 
 case "$OS_ID" in
@@ -83,7 +85,7 @@ esac
 if [[ "$ZBX_AGENT" == "zabbix-agent" ]]; then
     CONF_FILE="/etc/zabbix/zabbix_agentd.conf"
 else
-    CONF_FILE="/etc/zabbix/${ZBX_AGENT}.conf"
+    CONF_FILE="/etc/zabbix/${ZBX_AGENT//-/_}.conf"
 fi
 
 # Atualizar configuração
