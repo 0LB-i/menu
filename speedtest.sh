@@ -49,5 +49,4 @@ EOF
 
 # Reload systemd and enable the service to start on boot
 systemctl daemon-reload
-systemctl daemon-reload
 systemctl enable --now ookla.service
