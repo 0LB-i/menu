@@ -28,6 +28,7 @@ menu_scripts() {
             "9" "Configuração do rc.local Ubuntu" \
             "10" "Configuração de Dump do Zabbix" \
             "11" "Instalar Zabbix Proxy" \
+            "12" "Corrigir Unbound (fix)" \
             3>&1 1>&2 2>&3)
         RET=$?
 
@@ -73,6 +74,9 @@ menu_scripts() {
                 ;;
             11)
                 bash <(curl -s https://raw.githubusercontent.com/0LB-i/menu/main/zabbix-proxy.sh)
+                ;;
+            12)
+                bash <(curl -s https://raw.githubusercontent.com/0LB-i/menu/main/fix_unbound.sh)
                 ;;
             *)
                 whiptail --msgbox "Opção inválida!" 8 30

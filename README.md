@@ -13,7 +13,3 @@ Run the following command directly in your terminal. It downloads and executes t
 ```bash
 bash <(curl -s https://raw.githubusercontent.com/0LB-i/menu/main/menu.sh)
 ```
-### Script for initial configuration
-```bash
-bash <(curl -s https://raw.githubusercontent.com/0LB-i/menu/main/conf-ini.sh)
-```

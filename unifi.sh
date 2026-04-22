@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# Verificar suporte a AVX (exigido pelo MongoDB 8.0)
+if ! grep -q avx /proc/cpuinfo; then
+  echo "ERRO: Este processador não suporta AVX. MongoDB 8.0 requer AVX para funcionar."
+  echo "Considere usar MongoDB 4.x com uma versão mais antiga do UniFi."
+  exit 1
+fi
+echo "AVX detectado. Prosseguindo com a instalação..."
+
 # Versão padrão do UniFi Server
 default_version="9.0.108"
 

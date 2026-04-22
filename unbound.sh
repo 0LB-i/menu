@@ -13,6 +13,29 @@ MEM_MB=$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo)
 MSG_CACHE_MB=$((MEM_MB / 4))
 RRSET_CACHE_MB=$((MSG_CACHE_MB * 2))
 KEY_CACHE_MB=$((MEM_MB / 16))
+SO_BUF_MB=$((MEM_MB / 256))
+NETDEV_BACKLOG=$((THREADS * 1024))
+UDP_MEM_PRESSURE=$((MEM_MB * 1024 / 4 / 4))
+UDP_MEM_LIMIT=$((MEM_MB * 1024 / 4 / 2))
+UDP_MEM_MAX=$((MEM_MB * 1024 / 4))
+FILE_MAX=$((THREADS * 16384 * 4))
+
+echo "==> Ajustando parâmetros do kernel..."
+sysctl_set() {
+  local key=$1 val=$2
+  sysctl -w "${key}=${val}"
+  grep -q "^${key}" /etc/sysctl.conf \
+    && sed -i "s|^${key}=.*|${key}=${val}|" /etc/sysctl.conf \
+    || echo "${key}=${val}" >> /etc/sysctl.conf
+}
+
+sysctl_set net.core.rmem_max           $((SO_BUF_MB * 1024 * 1024))
+sysctl_set net.core.wmem_max           $((SO_BUF_MB * 1024 * 1024))
+sysctl_set net.core.netdev_max_backlog $NETDEV_BACKLOG
+sysctl_set net.ipv4.udp_mem            "$UDP_MEM_PRESSURE $UDP_MEM_LIMIT $UDP_MEM_MAX"
+sysctl_set net.ipv4.ip_local_port_range "1024 65535"
+sysctl_set vm.swappiness               10
+sysctl_set fs.file-max                 $FILE_MAX
 
 sed -i \
   -e "s/# num-threads:.*/num-threads: ${THREADS}/" \
@@ -23,8 +46,8 @@ sed -i \
   -e "s/# rrset-cache-size:.*/rrset-cache-size: ${RRSET_CACHE_MB}m/" \
   -e "s/# msg-cache-size:.*/msg-cache-size: ${MSG_CACHE_MB}m/" \
   -e "s/# key-cache-size:.*/key-cache-size: ${KEY_CACHE_MB}m/" \
-  -e 's/# so-rcvbuf:.*/so-rcvbuf: 4m/' \
-  -e 's/# so-sndbuf:.*/so-sndbuf: 4m/' \
+  -e "s/# so-rcvbuf:.*/so-rcvbuf: ${SO_BUF_MB}m/" \
+  -e "s/# so-sndbuf:.*/so-sndbuf: ${SO_BUF_MB}m/" \
   -e 's/# interface: 0.0.0.0$/interface: 0.0.0.0/' \
   -e 's/# interface: ::0$/interface: ::0/' \
   -e 's/# interface: 192\.0\.2\.153$/interface: 0.0.0.0@853/' \
@@ -33,10 +56,10 @@ sed -i \
   -e 's|# tls-service-pem:.*|tls-service-pem: "/etc/unbound/unbound_server.pem"|' \
   -e 's/# tls-port:.*/tls-port: 853/' \
   -e 's/interface-automatic: no/interface-automatic: yes/' \
-  -e 's/# outgoing-range:.*/outgoing-range: 8192/' \
-  -e 's/# num-queries-per-thread:.*/num-queries-per-thread: 4096/' \
+  -e 's/# outgoing-range:.*/outgoing-range: 65535/' \
+  -e 's/# num-queries-per-thread:.*/num-queries-per-thread: 16384/' \
   -e 's/# cache-max-ttl:.*/cache-max-ttl: 14400/' \
-  -e 's/# cache-min-ttl:.*/cache-min-ttl: 300/' \
+  -e 's/# cache-min-ttl:.*/cache-min-ttl: 60/' \
   -e 's/# ip-ratelimit:.*/ip-ratelimit: 300/' \
   -e 's/# ip-ratelimit-factor:.*/ip-ratelimit-factor: 0/' \
   -e 's|# root-hints: ""|root-hints: "/var/lib/unbound/root.hints"|' \
@@ -48,6 +71,9 @@ sed -i \
   -e '/^[[:space:]]*hide-identity:[[:space:]]*yes$/!s/^[# ]*hide-identity:.*/hide-identity: yes/' \
   -e '/^[[:space:]]*hide-version:[[:space:]]*yes$/!s/^[# ]*hide-version:.*/hide-version: yes/' \
   -e '/^[[:space:]]*use-caps-for-id:[[:space:]]*yes$/!s/^[# ]*use-caps-for-id:.*/use-caps-for-id: yes/' \
+  -e 's/# edns-buffer-size:.*/edns-buffer-size: 1232/' \
+  -e '/^[[:space:]]*aggressive-nsec:[[:space:]]*yes$/!s/^[# ]*aggressive-nsec:.*/aggressive-nsec: yes/' \
+  -e 's/# infra-cache-numhosts:.*/infra-cache-numhosts: 100000/' \
   /etc/unbound/unbound.conf
 
 echo "==> Adicionando access-control..."
