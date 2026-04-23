@@ -1,21 +1,25 @@
 #!/bin/bash
 
-# Verificar suporte a AVX (exigido pelo MongoDB 8.0)
+# Verificar suporte a AVX (exigido pelo MongoDB 5.0+)
+AVX_SUPPORTED=true
 if ! grep -q avx /proc/cpuinfo; then
-  echo "ERRO: Este processador não suporta AVX. MongoDB 8.0 requer AVX para funcionar."
-  echo "Considere usar MongoDB 4.x com uma versão mais antiga do UniFi."
-  exit 1
+  AVX_SUPPORTED=false
+  echo "AVISO: Este processador não suporta AVX. Usando MongoDB 4.4 como alternativa."
 fi
-echo "AVX detectado. Prosseguindo com a instalação..."
+
+# Detectar versão do RHEL
+OS_VER=$(rpm -E %{rhel} 2>/dev/null || echo "8")
 
 # Versão padrão do UniFi Server
 default_version="9.0.108"
 
 # Perguntar a versão do UniFi Server, com valor padrão
-read -p "Enter the version of UniFi Server you want to install [press Enter for 9.0.108]: " unifi_version
+read -p "Enter the version of UniFi Server you want to install [press Enter for ${default_version}]: " unifi_version
 unifi_version=${unifi_version:-$default_version}
 
-cat << 'EOF' > /etc/yum.repos.d/mongodb-org-8.0.repo
+if [[ "$AVX_SUPPORTED" == "true" ]]; then
+    echo "AVX detectado. Prosseguindo com MongoDB 8.0..."
+    cat << 'EOF' > /etc/yum.repos.d/mongodb-org-8.0.repo
 [mongodb-org-8.0]
 name=MongoDB Repository
 baseurl=https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/8.0/x86_64/
@@ -23,6 +27,22 @@ gpgcheck=1
 enabled=1
 gpgkey=https://pgp.mongodb.com/server-8.0.asc
 EOF
+else
+    # MongoDB 4.4 não tem pacotes para RHEL 9 — usa repo do RHEL 8 como fallback
+    MONGO_RELVER="$OS_VER"
+    if [[ "$OS_VER" == "9" ]]; then
+        echo "RHEL 9 detectado sem AVX. Usando repositório MongoDB 4.4 para RHEL 8 como fallback..."
+        MONGO_RELVER="8"
+    fi
+    cat > /etc/yum.repos.d/mongodb-org-4.4.repo << EOF
+[mongodb-org-4.4]
+name=MongoDB 4.4 Repository
+baseurl=https://repo.mongodb.org/yum/redhat/${MONGO_RELVER}/mongodb-org/4.4/x86_64/
+gpgcheck=1
+enabled=1
+gpgkey=https://pgp.mongodb.com/server-4.4.asc
+EOF
+fi
 
 # Atualizar e instalar dependências
 yum update -y

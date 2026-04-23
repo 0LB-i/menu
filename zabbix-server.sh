@@ -101,7 +101,7 @@ zcat /usr/share/zabbix/sql-scripts/postgresql/server.sql.gz | sudo -u zabbix /us
 
 # ▶ Aplica schema TimescaleDB por cima
 echo "➤ Aplicando schema TimescaleDB..."
-cat /usr/share/zabbix/sql-scripts/postgresql/timescaledb/schema.sql | sudo -u zabbix /usr/pgsql-16/bin/psql zabbix
+sudo -u zabbix /usr/pgsql-16/bin/psql zabbix < /usr/share/zabbix/sql-scripts/postgresql/timescaledb/schema.sql
 
 # ▶ Configuração do Zabbix Server
 ZBX_CONF="/etc/zabbix/zabbix_server.conf"

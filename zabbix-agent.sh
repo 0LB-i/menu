@@ -45,6 +45,14 @@ declare -A ZBX_REPO_RPMS=(
   ["4.4"]="https://repo.zabbix.com/zabbix/4.4/rhel/{OS_VER}/{ARCH}/zabbix-release-4.4-1.el{OS_VER}.noarch.rpm"
 )
 
+# Sufixo de release do pacote .deb por versão do Zabbix
+declare -A ZBX_DEB_RELEASE=(
+  ["7.0"]="2"
+  ["6.4"]="1"
+  ["6.0"]="4"
+  ["4.4"]="1"
+)
+
 install_rhel_repo() {
   local url_template="${ZBX_REPO_RPMS[$ZBX_VERSION]}"
   if [[ -z "$url_template" ]]; then
@@ -60,8 +68,22 @@ install_rhel_repo() {
 }
 
 install_debian_repo() {
-    echo "Adicionando repositório Zabbix para Debian-based..."
-    wget "https://repo.zabbix.com/zabbix/${ZBX_VERSION}/${OS_ID}/pool/main/z/zabbix/zabbix-release_${ZBX_VERSION}-1+${OS_ID}${VERSION_ID}_all.deb" -O /tmp/zabbix-release.deb \
+    local url
+
+    if [[ "$ZBX_VERSION" == "7.4" ]]; then
+        # Zabbix 7.4 usa formato de URL diferente com 'latest'
+        url="https://repo.zabbix.com/zabbix/7.4/release/${OS_ID}/pool/main/z/zabbix-release/zabbix-release_latest+${OS_ID}${VERSION_ID}_all.deb"
+    else
+        local release_suffix="${ZBX_DEB_RELEASE[$ZBX_VERSION]}"
+        if [[ -z "$release_suffix" ]]; then
+            echo "❌ Versão $ZBX_VERSION não suportada para ${OS_ID}."
+            exit 1
+        fi
+        url="https://repo.zabbix.com/zabbix/${ZBX_VERSION}/${OS_ID}/pool/main/z/zabbix-release/zabbix-release_${ZBX_VERSION}-${release_suffix}+${OS_ID}${VERSION_ID}_all.deb"
+    fi
+
+    echo "Adicionando repositório Zabbix para ${OS_ID} ${VERSION_ID}..."
+    wget "$url" -O /tmp/zabbix-release.deb \
         || { echo "❌ Falha ao baixar pacote Zabbix para ${OS_ID} ${VERSION_ID}."; exit 1; }
     dpkg -i /tmp/zabbix-release.deb
     apt-get update

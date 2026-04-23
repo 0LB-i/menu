@@ -14,18 +14,16 @@ ConditionPathExists=/etc/rc.local
 After=network.target
 
 [Service]
-Type=forking
+Type=oneshot
 ExecStart=/etc/rc.local
 TimeoutSec=0
-StandardOutput=tty
+StandardOutput=journal
 RemainAfterExit=yes
-SysVStartPriority=99
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-systemctl daemon-reexec
 systemctl daemon-reload
 systemctl enable --now rc-local
 systemctl status rc-local --no-pager

@@ -4,8 +4,8 @@
 cd /opt || exit 1
 dnf install -y wget tar
 wget https://install.speedtest.net/ooklaserver/ooklaserver.sh || { echo "❌ Falha ao baixar ooklaserver.sh."; exit 1; }
-chmod a+x ooklaserver.sh
-./ooklaserver.sh install -f
+chmod u+x ooklaserver.sh
+./ooklaserver.sh install -f || { echo "❌ Falha na instalação do OoklaServer."; exit 1; }
 
 # Modify settings in the OoklaServer.properties file
 MAX_THREADS=$(( $(nproc) * 2 ))
