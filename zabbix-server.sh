@@ -27,7 +27,7 @@ echo "➤ Instalando utilitários básicos..."
 dnf install -y net-snmp net-snmp-utils glibc-langpack-pt whois
 
 # ▶ Adiciona repositório Zabbix de acordo com a distro detectada
-REPO_URL="https://repo.zabbix.com/zabbix/$ZBX_VERSION/release/$OS_ID/9/noarch/zabbix-release-latest-$ZBX_VERSION.el9.noarch.rpm"
+REPO_URL="https://repo.zabbix.com/zabbix/$ZBX_VERSION/release/el/9/noarch/zabbix-release-latest-$ZBX_VERSION.el9.noarch.rpm"
 echo "➤ Adicionando repositório Zabbix versão $ZBX_VERSION para $OS_ID..."
 rpm -Uvh "$REPO_URL" || {
   echo "❌ Erro ao adicionar o repositório. Verifique se a versão está correta."
