@@ -78,8 +78,8 @@ EOF
 
 dnf makecache
 
-echo "➤ Instalando TimescaleDB para PostgreSQL 16..."
-dnf install -y timescaledb-2-postgresql-16
+echo "➤ Instalando TimescaleDB 2.26.0 para PostgreSQL 16..."
+dnf install -y timescaledb-2-postgresql-16-2.26.0
 
 # ▶ Tuning automático do PostgreSQL via timescaledb-tune
 echo "➤ Aplicando tuning do PostgreSQL com timescaledb-tune..."
