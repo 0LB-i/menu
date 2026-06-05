@@ -82,6 +82,9 @@ dnf makecache
 echo "➤ Instalando TimescaleDB 2.26.0 para PostgreSQL 16..."
 dnf install -y timescaledb-2-postgresql-16-2.26.0 timescaledb-tools
 
+echo "➤ Corrigindo control file do TimescaleDB para versão 2.26.0..."
+sed -i 's/2\.27\.2/2.26.0/g' /usr/pgsql-16/share/extension/timescaledb.control
+
 # ▶ Tuning automático do PostgreSQL via timescaledb-tune
 echo "➤ Aplicando tuning do PostgreSQL com timescaledb-tune..."
 timescaledb-tune --pg-config=/usr/pgsql-16/bin/pg_config --quiet --yes
