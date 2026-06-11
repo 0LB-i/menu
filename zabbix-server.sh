@@ -77,6 +77,7 @@ sslcacert=/etc/pki/tls/certs/ca-bundle.crt
 metadata_expire=300
 EOF
 
+rpm --import https://packagecloud.io/timescale/timescaledb/gpgkey
 dnf makecache
 
 echo "➤ Instalando TimescaleDB 2.26.0 para PostgreSQL 16..."

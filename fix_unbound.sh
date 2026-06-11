@@ -9,9 +9,9 @@ SLABS=1
 while [[ $SLABS -lt $THREADS ]]; do SLABS=$((SLABS * 2)); done
 
 MEM_MB=$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo)
-MSG_CACHE_MB=$((MEM_MB / 4))
+MSG_CACHE_MB=$((MEM_MB / 6))
 RRSET_CACHE_MB=$((MSG_CACHE_MB * 2))
-KEY_CACHE_MB=$((MEM_MB / 16))
+KEY_CACHE_MB=$((MEM_MB / 32))
 SO_BUF_MB=$((MEM_MB / 256))
 NETDEV_BACKLOG=$((THREADS * 1024))
 UDP_MEM_PRESSURE=$((MEM_MB * 1024 / 4 / 4))
