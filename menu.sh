@@ -29,6 +29,7 @@ menu_scripts() {
             "10" "Configuração de Dump do Zabbix" \
             "11" "Instalar Zabbix Proxy" \
             "12" "Corrigir Unbound (fix)" \
+            "13" "Instalar Akvorado (for lazy)" \
             3>&1 1>&2 2>&3)
         RET=$?
 
@@ -77,6 +78,9 @@ menu_scripts() {
                 ;;
             12)
                 bash <(curl -s https://raw.githubusercontent.com/0LB-i/menu/main/fix_unbound.sh)
+                ;;
+            13)
+                bash <(curl -s https://raw.githubusercontent.com/0LB-i/akvorado-for-lazy/main/bootstrap.sh)
                 ;;
             *)
                 whiptail --msgbox "Opção inválida!" 8 30
