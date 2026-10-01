@@ -17,6 +17,16 @@ default_version="9.0.108"
 read -p "Enter the version of UniFi Server you want to install [press Enter for ${default_version}]: " unifi_version
 unifi_version=${unifi_version:-$default_version}
 
+# A partir da versão 10, o UniFi Server roda em Java 25 (versões anteriores usam Java 17)
+unifi_major="${unifi_version%%.*}"
+if [[ "$unifi_major" -ge 10 ]]; then
+    java_pkg="java-25-openjdk-devel"
+    java_ver="25"
+else
+    java_pkg="java-17-openjdk-devel"
+    java_ver="17"
+fi
+
 if [[ "$AVX_SUPPORTED" == "true" ]]; then
     echo "AVX detectado. Prosseguindo com MongoDB 8.0..."
     cat << 'EOF' > /etc/yum.repos.d/mongodb-org-8.0.repo
@@ -47,7 +57,7 @@ fi
 # Atualizar e instalar dependências
 yum update -y
 yum install -y epel-release
-yum install -y mongodb-org java-17-openjdk-devel unzip wget
+yum install -y mongodb-org "$java_pkg" unzip wget
 
 useradd ubnt
 
@@ -66,7 +76,7 @@ unzip -qo /opt/UniFi.unix.zip -d /opt
 chown -R ubnt:ubnt /opt/UniFi
 
 # Criar arquivo de serviço systemd
-cat << 'EOF' > /etc/systemd/system/unifi.service
+cat << EOF > /etc/systemd/system/unifi.service
 # Systemd unit file for UniFi Controller
 [Unit]
 Description=UniFi AP Web Controller
@@ -77,9 +87,9 @@ Type=simple
 User=ubnt
 WorkingDirectory=/opt/UniFi
 # CONF PARA ALMA 9
-ExecStart=/usr/lib/jvm/jre-17/bin/java --add-opens=java.base/java.time=ALL-UNNAMED -jar /opt/UniFi/lib/ace.jar start
+ExecStart=/usr/lib/jvm/jre-${java_ver}/bin/java --add-opens=java.base/java.time=ALL-UNNAMED -jar /opt/UniFi/lib/ace.jar start
 # ExecStart=/usr/bin/java -Xmx1024M -jar /opt/UniFi/lib/ace.jar start
-ExecStop=/usr/bin/java -jar /opt/UniFi/lib/ace.jar stop
+ExecStop=/usr/lib/jvm/jre-${java_ver}/bin/java -jar /opt/UniFi/lib/ace.jar stop
 SuccessExitStatus=143
 
 [Install]

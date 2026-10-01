@@ -113,33 +113,47 @@ sudo -u zabbix /usr/pgsql-16/bin/psql zabbix < /usr/share/zabbix/sql-scripts/pos
 
 # ▶ Configuração do Zabbix Server
 ZBX_CONF="/etc/zabbix/zabbix_server.conf"
+
+set_zbx_param() {
+    local param="$1"
+    local value="$2"
+    local file="$3"
+
+    if grep -qE "^[[:space:]]*#?[[:space:]]*${param}=" "$file"; then
+        sed -i -E "s/^[[:space:]]*#?[[:space:]]*${param}=.*/${param}=${value}/" "$file"
+        echo "  ✔ ${param} atualizado (linha existente)"
+    else
+        echo "${param}=${value}" >> "$file"
+        echo "  ➕ ${param} adicionado (não existia no arquivo)"
+    fi
+}
+
 echo "➤ Configurando $ZBX_CONF..."
 
-sed -i "s/^# DBPassword=.*/DBPassword=$ZBX_DB_PASS/" "$ZBX_CONF"
+set_zbx_param "DBPassword" "$ZBX_DB_PASS" "$ZBX_CONF"
 
-# ▶ Tuning do Zabbix Server
 TOTAL_RAM_MB=$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo)
 CACHE_SIZE_MB=$((TOTAL_RAM_MB / 3))
 echo "➤ RAM total: ${TOTAL_RAM_MB}MB — CacheSize definido para ${CACHE_SIZE_MB}MB (1/3 da RAM)"
 
 echo "➤ Ajustando parâmetros de performance do Zabbix Server..."
-sed -i "/^#\?CacheSize=/c\CacheSize=${CACHE_SIZE_MB}M"                "$ZBX_CONF"
-sed -i "/^#\?StartPingers=/c\StartPingers=10"                         "$ZBX_CONF"
-sed -i "/^#\?StartPollers=/c\StartPollers=10"                         "$ZBX_CONF"
-sed -i "/^#\?StartPollersUnreachable=/c\StartPollersUnreachable=8"    "$ZBX_CONF"
-sed -i "/^#\?StartTrappers=/c\StartTrappers=5"                        "$ZBX_CONF"
-sed -i "/^#\?StartDBSyncers=/c\StartDBSyncers=8"                      "$ZBX_CONF"
-sed -i "/^#\?StartDiscoverers=/c\StartDiscoverers=3"                  "$ZBX_CONF"
-sed -i "/^#\?HistoryCacheSize=/c\HistoryCacheSize=128M"               "$ZBX_CONF"
-sed -i "/^#\?HistoryIndexCacheSize=/c\HistoryIndexCacheSize=32M"      "$ZBX_CONF"
-sed -i "/^#\?TrendCacheSize=/c\TrendCacheSize=64M"                    "$ZBX_CONF"
-sed -i "/^#\?ValueCacheSize=/c\ValueCacheSize=128M"                   "$ZBX_CONF"
-sed -i "/^#\?Timeout=/c\Timeout=30"                                   "$ZBX_CONF"
+set_zbx_param "CacheSize"               "${CACHE_SIZE_MB}M" "$ZBX_CONF"
+set_zbx_param "StartPingers"            "10"                "$ZBX_CONF"
+set_zbx_param "StartPollers"            "10"                "$ZBX_CONF"
+set_zbx_param "StartPollersUnreachable" "8"                 "$ZBX_CONF"
+set_zbx_param "StartTrappers"           "5"                 "$ZBX_CONF"
+set_zbx_param "StartDBSyncers"          "8"                 "$ZBX_CONF"
+set_zbx_param "StartDiscoverers"        "3"                 "$ZBX_CONF"
+set_zbx_param "HistoryCacheSize"        "128M"              "$ZBX_CONF"
+set_zbx_param "HistoryIndexCacheSize"   "32M"               "$ZBX_CONF"
+set_zbx_param "TrendCacheSize"          "64M"               "$ZBX_CONF"
+set_zbx_param "ValueCacheSize"          "128M"              "$ZBX_CONF"
+set_zbx_param "Timeout"                 "30"                "$ZBX_CONF"
 
 # ▶ Housekeeper
 echo "➤ Ajustando parâmetros do Housekeeper..."
-sed -i "/^#\?HousekeepingFrequency=/c\HousekeepingFrequency=12"       "$ZBX_CONF"
-sed -i "/^#\?MaxHousekeeperDelete=/c\MaxHousekeeperDelete=1000000"    "$ZBX_CONF"
+set_zbx_param "HousekeepingFrequency" "12"      "$ZBX_CONF"
+set_zbx_param "MaxHousekeeperDelete"  "1000000" "$ZBX_CONF"
 
 # ▶ Plugins adicionais
 echo "➤ Instalando plugins adicionais do zabbix-agent2..."

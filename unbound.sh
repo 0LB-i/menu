@@ -2,7 +2,7 @@
 set -e
 
 echo "==> Instalando pacotes..."
-yum install -y unbound logrotate curl iptables
+yum install -y unbound logrotate curl iptables kernel-modules-extra
 
 echo "==> Ajustando unbound.conf..."
 THREADS=$(nproc)
