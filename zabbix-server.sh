@@ -78,7 +78,7 @@ metadata_expire=300
 EOF
 
 rpm --import https://packagecloud.io/timescale/timescaledb/gpgkey
-dnf makecache
+dnf makecache -y
 
 echo "➤ Instalando TimescaleDB 2.26.0 para PostgreSQL 16..."
 dnf install -y timescaledb-2-postgresql-16-2.26.0 timescaledb-tools
@@ -88,7 +88,7 @@ sed -i 's/2\.27\.2/2.26.0/g' /usr/pgsql-16/share/extension/timescaledb.control
 
 # ▶ Tuning automático do PostgreSQL via timescaledb-tune
 echo "➤ Aplicando tuning do PostgreSQL com timescaledb-tune..."
-timescaledb-tune --pg-config=/usr/pgsql-16/bin/pg_config --quiet --yes
+timescaledb-tune --pg-config=/usr/pgsql-16/bin/pg_config --max-conns=300 --quiet --yes
 systemctl restart postgresql-16
 
 echo "➤ Aguardando PostgreSQL ficar disponível..."
