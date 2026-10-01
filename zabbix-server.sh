@@ -81,10 +81,10 @@ rpm --import https://packagecloud.io/timescale/timescaledb/gpgkey
 dnf makecache -y
 
 echo "➤ Instalando TimescaleDB 2.26.0 para PostgreSQL 16..."
-dnf install -y timescaledb-2-postgresql-16-2.26.0 timescaledb-tools
+dnf install -y timescaledb-2-postgresql-16-2.26.0 timescaledb-2-loader-postgresql-16-2.26.0 timescaledb-tools
 
 echo "➤ Corrigindo control file do TimescaleDB para versão 2.26.0..."
-sed -i 's/2\.27\.2/2.26.0/g' /usr/pgsql-16/share/extension/timescaledb.control
+sed -i -E "s/^default_version = '[^']*'/default_version = '2.26.0'/" /usr/pgsql-16/share/extension/timescaledb.control
 
 # ▶ Tuning automático do PostgreSQL via timescaledb-tune
 echo "➤ Aplicando tuning do PostgreSQL com timescaledb-tune..."
