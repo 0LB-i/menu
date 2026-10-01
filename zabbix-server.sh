@@ -119,9 +119,14 @@ set_zbx_param() {
     local value="$2"
     local file="$3"
 
-    if grep -qE "^[[:space:]]*#?[[:space:]]*${param}=" "$file"; then
-        sed -i -E "s/^[[:space:]]*#?[[:space:]]*${param}=.*/${param}=${value}/" "$file"
+    if grep -qE "^[[:space:]]*${param}=" "$file"; then
+        # Já existe linha ativa: remove duplicadas e atualiza só a primeira
+        sed -i -E "0,/^[[:space:]]*${param}=/{s/^[[:space:]]*${param}=.*/${param}=${value}/;t;};/^[[:space:]]*${param}=/d" "$file"
         echo "  ✔ ${param} atualizado (linha existente)"
+    elif grep -qE "^[[:space:]]*#[[:space:]]*${param}=" "$file"; then
+        # Só existe comentada: descomenta apenas a primeira ocorrência
+        sed -i -E "0,/^[[:space:]]*#[[:space:]]*${param}=/s//${param}=/;s/^${param}=.*/${param}=${value}/" "$file"
+        echo "  ✔ ${param} atualizado (linha comentada ativada)"
     else
         echo "${param}=${value}" >> "$file"
         echo "  ➕ ${param} adicionado (não existia no arquivo)"
