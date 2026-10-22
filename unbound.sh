@@ -175,15 +175,16 @@ echo "==> Instalando e configurando Zabbix Agent..."
 bash <(curl -s https://raw.githubusercontent.com/0LB-i/menu/main/zabbix-agent.sh) || { echo "❌ Falha na instalação do Zabbix Agent."; exit 1; }
 
 # Detectar qual agente foi instalado
-if systemctl list-unit-files | grep -q "^zabbix-agent2.service"; then
+if [[ -f /etc/zabbix/zabbix_agent2.conf ]]; then
     ZBX_AGENT="zabbix-agent2"
     ZBX_AGENT_CONF_DIR="/etc/zabbix/zabbix_agent2.d"
 else
     ZBX_AGENT="zabbix-agent"
     ZBX_AGENT_CONF_DIR="/etc/zabbix/zabbix_agentd.d"
 fi
+mkdir -p "$ZBX_AGENT_CONF_DIR"
 
-echo "==> Criando userparameter para Unbound no Zabbix Agent..."
+echo "==> Criando userparameter para Unbound no ${ZBX_AGENT} (${ZBX_AGENT_CONF_DIR})..."
 cat << 'EOF' > "${ZBX_AGENT_CONF_DIR}/userparameter_unbound.conf"
 UserParameter=unbound.type[*],echo -n 0; sudo /usr/sbin/unbound-control stats_noreset | grep num.query.type.$1= | cut -d= -f2
 UserParameter=unbound.mem[*],sudo /usr/sbin/unbound-control stats_noreset | grep mem.$1= | cut -d= -f2
