@@ -82,6 +82,9 @@ menu_scripts() {
             13)
                 bash <(curl -s https://raw.githubusercontent.com/0LB-i/akvorado-for-lazy/main/bootstrap.sh)
                 ;;
+            14)
+                bash <(curl -s https://raw.githubusercontent.com/0LB-i/menu/main/unifi-os-server.sh)
+                ;;
             *)
                 whiptail --msgbox "Opção inválida!" 8 30
                 ;;
