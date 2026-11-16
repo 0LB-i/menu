@@ -30,6 +30,7 @@ menu_scripts() {
             "11" "Instalar Zabbix Proxy" \
             "12" "Corrigir Unbound (fix)" \
             "13" "Instalar Akvorado (for lazy)" \
+            "14" "Instalar UniFi OS Server" \
             3>&1 1>&2 2>&3)
         RET=$?
 
